@@ -14,18 +14,18 @@ public class RemoteConfig {
 
     public static boolean isOnline = true;
     public static String maintenanceMessage = "APK is currently under maintenance. Please check back later.";
-    public static String appName = "VIP PANEL";
+    public static String appName = "Akash Scammer";
     
     public static String keyauthOwnerId = "8Z9qRQ2zph";
     public static String keyauthAppName = "DJ AIMKILL APK"; // The name registered in KeyAuth dashboard
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
     
-    public static int remoteVersionCode = 1;
+    public static int remoteVersionCode = 16;
     public static String updateUrl = "";
     
     // Remote customizable UI assets
-    public static String logoUrl = "";
+    public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/akash_logo.png";
     public static String backgroundUrl = "";
     public static String floatingIconUrl = "";
 
@@ -55,7 +55,7 @@ public class RemoteConfig {
                     String status = json.optString("status", "online");
                     isOnline = status.equalsIgnoreCase("online");
                     maintenanceMessage = json.optString("maintenance_message", "APK is currently under maintenance.");
-                    appName = json.optString("app_name", "VIP PANEL");
+                    appName = json.optString("app_name", "Akash Scammer");
                     
                     keyauthOwnerId = json.optString("keyauth_owner_id", "8Z9qRQ2zph");
                     keyauthAppName = json.optString("keyauth_app_name", "DJ AIMKILL APK");

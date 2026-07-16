@@ -796,7 +796,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 if (alpha < 0) alpha = 0;
                 if (alpha > 255) alpha = 255;
 
-                float toastWidth = 340.0f;
+                float toastWidth = 360.0f;
                 float toastHeight = 85.0f;
                 float toastX = (float)draw.getWidth() - toastWidth - 30.0f;
                 float toastY = (float)draw.getHeight() - toastHeight - 50.0f;
@@ -820,13 +820,13 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 draw.DrawFilledRectinfo(outlineColor, Rect(toastX, toastY, 6.0f, toastHeight));
 
                 // 4. Draw Bell Emoji 🔔 on the left
-                draw.DrawText(Color(255, 255, 255, alpha), "🔔", Vector2(toastX + 20.0f, toastY + 52.0f), 28.0f);
+                draw.DrawText(Color(255, 255, 255, alpha), "🔔", Vector2(toastX + 35.0f, toastY + 53.0f), 28.0f);
 
-                // 5. Draw Title: "SYSTEM ALERT" in bold red
-                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), "SYSTEM ALERT", Vector2(toastX + 65.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
-                draw.DrawText(outlineColor, "SYSTEM ALERT", Vector2(toastX + 65.0f, toastY + 28.0f), 12.0f);
+                // 5. Draw Title: "SYSTEM ALERT" in bold red (left-aligned)
+                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), "SYSTEM ALERT", Vector2(toastX + 70.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
+                draw.DrawTextLeft(outlineColor, "SYSTEM ALERT", Vector2(toastX + 70.0f, toastY + 28.0f), 12.0f);
 
-                // 6. Draw Status Message: "[Feature] Enabled/Disabled"
+                // 6. Draw Status Message: "[Feature] Enabled/Disabled" (left-aligned)
                 char statusText[96];
                 if (currentNotification.enabled) {
                     sprintf(statusText, "%s Enabled", currentNotification.name);
@@ -837,8 +837,8 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 Color textColor = currentNotification.enabled ? Color::Green() : Color::Red();
                 textColor.a = alpha;
 
-                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 65.0f + 1.0f, toastY + 58.0f + 1.0f), 18.0f);
-                draw.DrawText(textColor, statusText, Vector2(toastX + 65.0f, toastY + 58.0f), 18.0f);
+                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 70.0f + 1.0f, toastY + 58.0f + 1.0f), 18.0f);
+                draw.DrawTextLeft(textColor, statusText, Vector2(toastX + 70.0f, toastY + 58.0f), 18.0f);
             } else {
                 currentNotification.active = false;
             }

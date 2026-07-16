@@ -148,6 +148,26 @@ public class DrawView extends View implements Runnable {
         cvs.drawText(txt, posX, posY, mTextPaint);
     }
 
+    public void DrawTextLeft(Canvas cvs, int a, int r, int g, int b, float stroke, String txt, float posX, float posY, float size)
+    {
+        mTextPaint.setColor(Color.rgb(r, g, b));
+        mTextPaint.setAlpha(a);
+        mTextPaint.setTextSize(size);
+
+        if (getRight() > 1920 || getBottom() > 1920) {
+            mTextPaint.setTextSize(4.0f + size);
+        }
+        else if (getRight() == 1920 || getBottom() == 1920) {
+            mTextPaint.setTextSize(size + 2.0f);
+        }
+        else
+            mTextPaint.setTextSize(size);
+
+        mTextPaint.setTextAlign(Paint.Align.LEFT);
+        cvs.drawText(txt, posX, posY, mTextPaint);
+        mTextPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
 
 
     public void DrawText2(Canvas cvs, int a, int r, int g, int b, String txt, float posX, float posY, float size) {

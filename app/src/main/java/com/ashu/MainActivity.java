@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
                 }
 
                 if (RemoteConfig.remoteVersionCode > localVersion) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
+                    downloadAndInstallApk(RemoteConfig.updateUrl);
                     return;
                 }
 
@@ -117,7 +117,13 @@ public class MainActivity extends Activity {
                 if (apkFile.exists()) apkFile.delete();
 
                 // Download APK
-                java.net.URL url = new java.net.URL(apkUrl);
+                String finalUrl = apkUrl;
+                if (finalUrl.contains("?")) {
+                    finalUrl += "&t=" + System.currentTimeMillis();
+                } else {
+                    finalUrl += "?t=" + System.currentTimeMillis();
+                }
+                java.net.URL url = new java.net.URL(finalUrl);
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(15000);

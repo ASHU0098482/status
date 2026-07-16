@@ -484,10 +484,10 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
         }
 
         char fpsText[32];
-        sprintf(fpsText, "FPS: %.1f", fpsValue);
-        Vector2 fpsPos(30.0f, (float)draw.getHeight() - 30.0f);
-        draw.DrawText(Color(0, 0, 0, 200), fpsText, Vector2(fpsPos.X + 1.5f, fpsPos.Y + 1.5f), 18.0f);
-        draw.DrawText(Color::Cyan(), fpsText, fpsPos, 18.0f);
+        sprintf(fpsText, "FPS- %.0f", fpsValue);
+        Vector2 fpsPos(30.0f, (float)draw.getHeight() - 40.0f);
+        draw.DrawText(Color(0, 0, 0, 200), fpsText, Vector2(fpsPos.X + 2.0f, fpsPos.Y + 2.0f), 30.0f);
+        draw.DrawText(Color::Cyan(), fpsText, fpsPos, 30.0f);
 
         if (pEspPlayer.espDrawFov) {
             // Draw a Cyan circle with thicker line (4.0 thickness) at center of screen.

@@ -431,6 +431,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 20:
             MasterBool.upplayerx = !MasterBool.upplayerx;
             SendFeatuere(20, MasterBool.upplayerx);
+            showNotification("Up Player", MasterBool.upplayerx);
             break;
         case 21:
             MasterBool.aimbody = !MasterBool.aimbody;
@@ -447,6 +448,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 500:
             MasterBool.Aimkilltp = !MasterBool.Aimkilltp;
             SendFeatuere(500, MasterBool.Aimkilltp);
+            showNotification("Sniper Auto Aim", MasterBool.Aimkilltp);
             break;
         case 501:
             MasterBool.Aimkilltpv2 = !MasterBool.Aimkilltpv2;
@@ -578,9 +580,10 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawText(Color::Cyan(), "VIP PANEL", welcomePos, 45.0f);
         }
 
-        Response response = getData(draw.getWidth(), draw.getHeight());
+        if (pAimbotPlayer.enableAimbot) {
+            Response response = getData(draw.getWidth(), draw.getHeight());
 
-        if (response.Success) {
+            if (response.Success) {
             for (int i = 0; i < response.PlayerCount; ++i) {
                 PlayerData data = response.Players[i];
 
@@ -781,6 +784,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 }
             }
         }
+    }
 
 
         // --- Premium Bottom-Right Notification Toast ---

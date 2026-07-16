@@ -796,10 +796,10 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 if (alpha < 0) alpha = 0;
                 if (alpha > 255) alpha = 255;
 
-                float toastWidth = 260.0f;
-                float toastHeight = 50.0f;
+                float toastWidth = 340.0f;
+                float toastHeight = 85.0f;
                 float toastX = (float)draw.getWidth() - toastWidth - 30.0f;
-                float toastY = (float)draw.getHeight() - toastHeight - 40.0f;
+                float toastY = (float)draw.getHeight() - toastHeight - 50.0f;
 
                 if (elapsed < 300) {
                     float progress = elapsed / 300.0f;
@@ -809,9 +809,24 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     toastX = (float)draw.getWidth() - (toastWidth + 30.0f) * progress;
                 }
 
-                draw.DrawFilledRectinfo(Color(18, 18, 18, (int)(alpha * 0.9f)), Rect(toastX, toastY, toastWidth, toastHeight));
-                draw.DrawFilledRectinfo(Color(204, 0, 0, alpha), Rect(toastX, toastY, 4.0f, toastHeight));
+                // 1. Draw card background (semi-transparent dark)
+                draw.DrawFilledRectinfo(Color(20, 20, 20, (int)(alpha * 0.92f)), Rect(toastX, toastY, toastWidth, toastHeight));
 
+                // 2. Draw card outline box (thin red border for gaming aesthetic)
+                Color outlineColor = Color(204, 0, 0, alpha);
+                draw.DrawBox(outlineColor, 1.5f, Rect(toastX, toastY, toastWidth, toastHeight));
+
+                // 3. Draw thick left accent stripe
+                draw.DrawFilledRectinfo(outlineColor, Rect(toastX, toastY, 6.0f, toastHeight));
+
+                // 4. Draw Bell Emoji 🔔 on the left
+                draw.DrawText(Color(255, 255, 255, alpha), "🔔", Vector2(toastX + 20.0f, toastY + 52.0f), 28.0f);
+
+                // 5. Draw Title: "SYSTEM ALERT" in bold red
+                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), "SYSTEM ALERT", Vector2(toastX + 65.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
+                draw.DrawText(outlineColor, "SYSTEM ALERT", Vector2(toastX + 65.0f, toastY + 28.0f), 12.0f);
+
+                // 6. Draw Status Message: "[Feature] Enabled/Disabled"
                 char statusText[96];
                 if (currentNotification.enabled) {
                     sprintf(statusText, "%s Enabled", currentNotification.name);
@@ -822,8 +837,8 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 Color textColor = currentNotification.enabled ? Color::Green() : Color::Red();
                 textColor.a = alpha;
 
-                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 15.0f + 1.0f, toastY + 30.0f + 1.0f), 14.0f);
-                draw.DrawText(textColor, statusText, Vector2(toastX + 15.0f, toastY + 30.0f), 14.0f);
+                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 65.0f + 1.0f, toastY + 58.0f + 1.0f), 18.0f);
+                draw.DrawText(textColor, statusText, Vector2(toastX + 65.0f, toastY + 58.0f), 18.0f);
             } else {
                 currentNotification.active = false;
             }

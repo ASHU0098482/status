@@ -154,7 +154,11 @@ public class MainActivity extends Activity {
         try {
             Process process = Runtime.getRuntime().exec("su");
             java.io.OutputStream os = process.getOutputStream();
-            os.write(("pm install -r " + apkFile.getAbsolutePath() + "\n").getBytes());
+            // Copy to /data/local/tmp/ to bypass SELinux and namespace read restrictions
+            os.write(("cp " + apkFile.getAbsolutePath() + " /data/local/tmp/update.apk\n").getBytes());
+            os.write(("chmod 666 /data/local/tmp/update.apk\n").getBytes());
+            os.write(("pm install -r /data/local/tmp/update.apk\n").getBytes());
+            os.write(("rm /data/local/tmp/update.apk\n").getBytes());
             os.write("exit\n".getBytes());
             os.flush();
             int result = process.waitFor();

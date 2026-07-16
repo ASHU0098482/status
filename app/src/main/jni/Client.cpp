@@ -279,14 +279,17 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
 
         case 1:
             pEspPlayer.espLine = !pEspPlayer.espLine;
+            SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
             break;
 
         case 2:
             pEspPlayer.espBox = !pEspPlayer.espBox;
+            SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
             break;
 
         case 3:
             pEspPlayer.espHealth = !pEspPlayer.espHealth;
+            SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
             break;
         case 33333:
             pEspPlayer.DISC = !pEspPlayer.DISC;
@@ -294,6 +297,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
 
         case 4:
             pEspPlayer.espNickName = !pEspPlayer.espNickName;
+            SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
             break;
 
         case 5:
@@ -351,6 +355,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
 
         case 9:
             pEspPlayer.espHealth = !pEspPlayer.espHealth;
+            SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
             break;
         case 14:
             pEspPlayer.espTracker = !pEspPlayer.espTracker;

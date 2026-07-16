@@ -116,6 +116,20 @@ long long getCurrentTimeMs() {
     ).count();
 }
 
+struct FeatureNotification {
+    char name[64];
+    bool enabled;
+    long long startTime;
+    bool active;
+} currentNotification;
+
+void showNotification(const char* name, bool enabled) {
+    strcpy(currentNotification.name, name);
+    currentNotification.enabled = enabled;
+    currentNotification.startTime = getCurrentTimeMs();
+    currentNotification.active = true;
+}
+
 // Called from Java to send owner ID
 
 // Show toast from native
@@ -207,6 +221,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
                 } else {
                     showAnimation = false;
                 }
+                showNotification("Activate All", pAimbotPlayer.enableAimbot);
             } else {
                 ShowErrorToast(env, "VIP PANEL ALWAYS ON TOP ✅.   ");
                 LOGD("❌ BLOCKED: Owner ID mismatch! Found: %s", LoggedInOwnerID.c_str());
@@ -218,10 +233,12 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 103:
             pAimbotPlayer.Aimkill = !pAimbotPlayer.Aimkill;
             SendFeatuere(103, pAimbotPlayer.Aimkill);
+            showNotification("Silent Aim", pAimbotPlayer.Aimkill);
             break;
         case 1055:
             pAimbotPlayer.Aimkill360 = !pAimbotPlayer.Aimkill360;
             SendFeatuere(1055, pAimbotPlayer.Aimkill360);
+            showNotification("Drag Headshot", pAimbotPlayer.Aimkill360);
             break;
         case 7581:
             pAimbotPlayer.Aimkillrage = !pAimbotPlayer.Aimkillrage;
@@ -284,16 +301,19 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 1:
             pEspPlayer.espLine = !pEspPlayer.espLine;
             SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
+            showNotification("ESP Line", pEspPlayer.espLine);
             break;
 
         case 2:
             pEspPlayer.espBox = !pEspPlayer.espBox;
             SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
+            showNotification("ESP Box", pEspPlayer.espBox);
             break;
 
         case 3:
             pEspPlayer.espHealth = !pEspPlayer.espHealth;
             SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
+            showNotification("ESP Health", pEspPlayer.espHealth);
             break;
         case 33333:
             pEspPlayer.DISC = !pEspPlayer.DISC;
@@ -302,6 +322,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 4:
             pEspPlayer.espNickName = !pEspPlayer.espNickName;
             SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
+            showNotification("ESP Name", pEspPlayer.espNickName);
             break;
 
         case 5:
@@ -355,11 +376,13 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
 
         case 16:
             pEspPlayer.espDrawFov = !pEspPlayer.espDrawFov;
+            showNotification("Show Fov", pEspPlayer.espDrawFov);
             break;
 
         case 9:
             pEspPlayer.espHealth = !pEspPlayer.espHealth;
             SendFeatuere(3, pEspPlayer.espLine || pEspPlayer.espBox || pEspPlayer.espNickName || pEspPlayer.espHealth);
+            showNotification("ESP Health", pEspPlayer.espHealth);
             break;
         case 14:
             pEspPlayer.espTracker = !pEspPlayer.espTracker;
@@ -457,6 +480,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 508:
             MasterBool.TeleBeta = !MasterBool.TeleBeta;
             SendFeatuere(508, MasterBool.TeleBeta);
+            showNotification("Sniper Auto Aim", MasterBool.TeleBeta);
             break;
         case 509:
             MasterBool.climbup = !MasterBool.climbup;
@@ -758,6 +782,52 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             }
         }
 
+
+        // --- Premium Bottom-Right Notification Toast ---
+        if (currentNotification.active) {
+            long long elapsed = currentTime - currentNotification.startTime;
+            if (elapsed < 2500) {
+                int alpha = 255;
+                if (elapsed < 300) {
+                    alpha = (int)(255 * (elapsed / 300.0f));
+                } else if (elapsed > 2200) {
+                    alpha = (int)(255 * ((2500 - elapsed) / 300.0f));
+                }
+                if (alpha < 0) alpha = 0;
+                if (alpha > 255) alpha = 255;
+
+                float toastWidth = 260.0f;
+                float toastHeight = 50.0f;
+                float toastX = (float)draw.getWidth() - toastWidth - 30.0f;
+                float toastY = (float)draw.getHeight() - toastHeight - 40.0f;
+
+                if (elapsed < 300) {
+                    float progress = elapsed / 300.0f;
+                    toastX = (float)draw.getWidth() - (toastWidth + 30.0f) * progress;
+                } else if (elapsed > 2200) {
+                    float progress = (2500 - elapsed) / 300.0f;
+                    toastX = (float)draw.getWidth() - (toastWidth + 30.0f) * progress;
+                }
+
+                draw.DrawFilledRectinfo(Color(18, 18, 18, (int)(alpha * 0.9f)), Rect(toastX, toastY, toastWidth, toastHeight));
+                draw.DrawFilledRectinfo(Color(204, 0, 0, alpha), Rect(toastX, toastY, 4.0f, toastHeight));
+
+                char statusText[96];
+                if (currentNotification.enabled) {
+                    sprintf(statusText, "%s Enabled", currentNotification.name);
+                } else {
+                    sprintf(statusText, "%s Disabled", currentNotification.name);
+                }
+
+                Color textColor = currentNotification.enabled ? Color::Green() : Color::Red();
+                textColor.a = alpha;
+
+                draw.DrawText(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 15.0f + 1.0f, toastY + 30.0f + 1.0f), 14.0f);
+                draw.DrawText(textColor, statusText, Vector2(toastX + 15.0f, toastY + 30.0f), 14.0f);
+            } else {
+                currentNotification.active = false;
+            }
+        }
 
         // ESP Line Tracker and Name Tracker removed as per user request
 

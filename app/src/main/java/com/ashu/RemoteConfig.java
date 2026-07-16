@@ -34,7 +34,7 @@ public class RemoteConfig {
             HttpURLConnection conn = null;
             BufferedReader reader = null;
             try {
-                URL url = new URL(CONFIG_URL);
+                URL url = new URL(CONFIG_URL + "?t=" + System.currentTimeMillis());
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(5000);

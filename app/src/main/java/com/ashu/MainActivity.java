@@ -100,14 +100,6 @@ public class MainActivity extends Activity {
     }
 
     private void downloadAndInstallApk(final String apkUrl) {
-        // Show progress dialog
-        final android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(this);
-        progressDialog.setMessage("Downloading update...");
-        progressDialog.setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setCancelable(false);
-        progressDialog.setMax(100);
-        progressDialog.show();
-
         new Thread(() -> {
             try {
                 // Create updates directory
@@ -130,19 +122,12 @@ public class MainActivity extends Activity {
                 conn.setReadTimeout(15000);
                 conn.connect();
 
-                int fileLength = conn.getContentLength();
                 java.io.InputStream input = conn.getInputStream();
                 java.io.FileOutputStream output = new java.io.FileOutputStream(apkFile);
 
                 byte[] buffer = new byte[4096];
-                long total = 0;
                 int count;
                 while ((count = input.read(buffer)) != -1) {
-                    total += count;
-                    if (fileLength > 0) {
-                        final int progress = (int) (total * 100 / fileLength);
-                        runOnUiThread(() -> progressDialog.setProgress(progress));
-                    }
                     output.write(buffer, 0, count);
                 }
                 output.flush();
@@ -151,7 +136,6 @@ public class MainActivity extends Activity {
                 conn.disconnect();
 
                 runOnUiThread(() -> {
-                    progressDialog.dismiss();
                     // Install the APK
                     installApk(apkFile);
                 });
@@ -159,14 +143,31 @@ public class MainActivity extends Activity {
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Update failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
     }
 
     private void installApk(java.io.File apkFile) {
+        // Try root silent install first
+        try {
+            Process process = Runtime.getRuntime().exec("su");
+            java.io.OutputStream os = process.getOutputStream();
+            os.write(("pm install -r " + apkFile.getAbsolutePath() + "\n").getBytes());
+            os.write("exit\n".getBytes());
+            os.flush();
+            int result = process.waitFor();
+            if (result == 0) {
+                // Silent install succeeded!
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        // Fallback to standard installer
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             android.net.Uri apkUri;

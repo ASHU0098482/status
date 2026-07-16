@@ -84,25 +84,100 @@ public class MainActivity extends Activity {
             .show();
     }
 
-    private void showUpdateDialog(String updateUrl) {
+    private void showUpdateDialog(final String updateUrl) {
         new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("Update Required")
-            .setMessage("A new update is available. Please download the latest version to continue.")
+            .setTitle("🔄 Update Available!")
+            .setMessage("A new update is available. Tap 'UPDATE NOW' to download and install automatically.")
             .setCancelable(false)
             .setPositiveButton("UPDATE NOW", (d, which) -> {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(updateUrl));
-                    startActivity(intent);
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "Unable to open update link", Toast.LENGTH_LONG).show();
-                }
-                finishAffinity();
+                downloadAndInstallApk(updateUrl);
             })
             .setNegativeButton("EXIT", (d, which) -> {
                 finishAffinity();
             })
             .create()
             .show();
+    }
+
+    private void downloadAndInstallApk(final String apkUrl) {
+        // Show progress dialog
+        final android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(this);
+        progressDialog.setMessage("Downloading update...");
+        progressDialog.setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setCancelable(false);
+        progressDialog.setMax(100);
+        progressDialog.show();
+
+        new Thread(() -> {
+            try {
+                // Create updates directory
+                java.io.File updatesDir = new java.io.File(getExternalFilesDir(null), "updates");
+                if (!updatesDir.exists()) updatesDir.mkdirs();
+                java.io.File apkFile = new java.io.File(updatesDir, "VIP_PANEL_update.apk");
+                if (apkFile.exists()) apkFile.delete();
+
+                // Download APK
+                java.net.URL url = new java.net.URL(apkUrl);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
+                conn.connect();
+
+                int fileLength = conn.getContentLength();
+                java.io.InputStream input = conn.getInputStream();
+                java.io.FileOutputStream output = new java.io.FileOutputStream(apkFile);
+
+                byte[] buffer = new byte[4096];
+                long total = 0;
+                int count;
+                while ((count = input.read(buffer)) != -1) {
+                    total += count;
+                    if (fileLength > 0) {
+                        final int progress = (int) (total * 100 / fileLength);
+                        runOnUiThread(() -> progressDialog.setProgress(progress));
+                    }
+                    output.write(buffer, 0, count);
+                }
+                output.flush();
+                output.close();
+                input.close();
+                conn.disconnect();
+
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    // Install the APK
+                    installApk(apkFile);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "Download failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    private void installApk(java.io.File apkFile) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            android.net.Uri apkUri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Android 7+ uses FileProvider
+                apkUri = androidx.core.content.FileProvider.getUriForFile(
+                    this, getPackageName() + ".provider", apkFile);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                apkUri = android.net.Uri.fromFile(apkFile);
+            }
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Install failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

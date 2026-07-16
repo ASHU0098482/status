@@ -122,10 +122,14 @@ public class Menu {
     public void onCreateTemplate() {
         // Improved rounded corners for better visibility
         GradientDrawable gradientDrawable_container = new GradientDrawable();
-        gradientDrawable_container.setColor(0xFF111111);
-        gradientDrawable_container.setCornerRadius(utils.FixDP(10));
+        gradientDrawable_container.setColor(0xDC151515); // Semi-transparent dark grey
+        gradientDrawable_container.setCornerRadius(utils.FixDP(12));
+        gradientDrawable_container.setStroke(utils.FixDP(2), 0xFFCC0000); // Glowing Red Accent Border
 
         LinearLayout container = new LinearLayout(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            container.setLayoutTransition(new android.animation.LayoutTransition());
+        }
         container.setOrientation(LinearLayout.VERTICAL);
         container.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -138,7 +142,6 @@ public class Menu {
                 utils.FixDP(250),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
-        container_menu.setBackgroundColor(0xFF111111);
         container_menu.setVisibility(View.GONE);
         container_menu.setOrientation(LinearLayout.VERTICAL);
         container_menu.setBackground(gradientDrawable_container);

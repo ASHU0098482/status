@@ -493,6 +493,10 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             // Draw a Cyan circle with thicker line (4.0 thickness) at center of screen.
             // Radius scales dynamically with "Adjust Headshot Rate" (pAimbotPlayer.aimbotFOV: 0-100)
             float radius = 50.0f + (pAimbotPlayer.aimbotFOV * 4.0f);
+            // Draw glowing outer layers
+            draw.DrawCircle(Color(0, 255, 255, 35), 8.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius + 2.0f);
+            draw.DrawCircle(Color(0, 255, 255, 75), 5.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius + 1.0f);
+            // Main circle
             draw.DrawCircle(Color::Cyan(), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
@@ -601,6 +605,9 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 if (pEspPlayer.espBox) {
                     if (IsCaido) {
                         if (pEspPlayer.boxType == 0) {
+                            // Draw red glowing border
+                            Rect glowRect(PlayerRect.x - 1, PlayerRect.y - 1, PlayerRect.w + 2, PlayerRect.h + 2);
+                            draw.DrawBox(Color(255, 0, 0, 45), 5.5f, glowRect);
                             draw.DrawBox(Color::Red(), 2.5f, PlayerRect);
                         } else if (pEspPlayer.boxType == 1) {
                             draw.DrawBox3D(Color::Red(), 2.5f, PlayerRect, 10);
@@ -609,6 +616,11 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                         }
                     } else {
                         if (pEspPlayer.boxType == 0) {
+                            // Draw customizable color glowing border
+                            Rect glowRect(PlayerRect.x - 1, PlayerRect.y - 1, PlayerRect.w + 2, PlayerRect.h + 2);
+                            Color glowColor = pEspPlayer.espColor;
+                            glowColor.a = 45;
+                            draw.DrawBox(glowColor, 5.5f, glowRect);
                             draw.DrawBox(pEspPlayer.espColor, 2.5f, PlayerRect);
                         } else if (pEspPlayer.boxType == 1) {
                             draw.DrawBox3D(pEspPlayer.espColor, 2.5f, PlayerRect, 10);
@@ -720,6 +732,11 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
                 if (pEspPlayer.espBox) {
                     if (pEspPlayer.boxType == 0) {
+                        // Draw customizable color glowing border
+                        Rect glowRect(PlayerRect.x - 1, PlayerRect.y - 1, PlayerRect.w + 2, PlayerRect.h + 2);
+                        Color glowColor = pEspPlayer.espColor;
+                        glowColor.a = 45;
+                        draw.DrawBox(glowColor, 5.5f, glowRect);
                         draw.DrawBox(pEspPlayer.espColor, 2.5f, PlayerRect);
                     } else if (pEspPlayer.boxType == 1) {
                         draw.DrawBox3D(pEspPlayer.espColor, 2.5f, PlayerRect, 10);

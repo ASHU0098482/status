@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
         try {
             Runtime.getRuntime().exec("su");
         } catch (Exception e) {
-            Toast.makeText(this, "Root not found!", Toast.LENGTH_SHORT).show();
+            // Root not found - handled silently
         }
 
         ActionBar actionBar = getActionBar();

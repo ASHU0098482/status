@@ -354,7 +354,8 @@ public class Login {
                             .edit().putString("saved_license", licenseKey).apply();
 
                     new Handler(Looper.getMainLooper()).post(() -> {
-                        setStatus("✅ Login successful!", Color.WHITE, false);
+                        setStatus("Welcome " + licenseKey + " 👑", Color.WHITE, false);
+                        showToast("Welcome " + licenseKey + " 👑");
                         new Menu(context, 1);
                         isSettingsVisible = true;
                         settingsLayout.setVisibility(View.VISIBLE);

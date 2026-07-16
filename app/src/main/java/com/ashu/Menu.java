@@ -155,7 +155,8 @@ public class Menu {
         android.graphics.drawable.Drawable placeholderDrawable = null;
         try {
             byte[] decodeImageBase64 = android.util.Base64.decode(imageBase64(), android.util.Base64.DEFAULT);
-            logoBitmap = android.graphics.BitmapFactory.decodeByteArray(decodeImageBase64, 0, decodeImageBase64.length);
+            android.graphics.Bitmap rawBitmap = android.graphics.BitmapFactory.decodeByteArray(decodeImageBase64, 0, decodeImageBase64.length);
+            logoBitmap = Utils.makeBlackTransparent(rawBitmap);
             placeholderDrawable = new android.graphics.drawable.BitmapDrawable(context.getResources(), logoBitmap);
         } catch (Exception e) {
             e.printStackTrace();

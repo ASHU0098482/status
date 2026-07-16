@@ -89,7 +89,7 @@ public class Login {
 
         // Add remote logo if available
         if (RemoteConfig.logoUrl != null && !RemoteConfig.logoUrl.isEmpty()) {
-            ImageView logoView = new ImageView(context);
+            final ImageView logoView = new ImageView(context);
             LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(
                     new Utils(context).FixDP(120),
                     new Utils(context).FixDP(120)
@@ -98,7 +98,20 @@ public class Login {
             logoView.setLayoutParams(logoParams);
             logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             card.addView(logoView);
-            com.bumptech.glide.Glide.with(context).load(RemoteConfig.logoUrl).into(logoView);
+            
+            com.bumptech.glide.Glide.with(context)
+                .asBitmap()
+                .load(RemoteConfig.logoUrl)
+                .into(new com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
+                    @Override
+                    public void onResourceReady(@androidx.annotation.NonNull android.graphics.Bitmap resource, @androidx.annotation.Nullable com.bumptech.glide.request.transition.Transition<? super android.graphics.Bitmap> transition) {
+                        android.graphics.Bitmap transparentBitmap = Utils.makeBlackTransparent(resource);
+                        logoView.setImageBitmap(transparentBitmap);
+                    }
+                    @Override
+                    public void onLoadCleared(@androidx.annotation.Nullable android.graphics.drawable.Drawable placeholder) {
+                    }
+                });
         }
 
         // Title with red first word and white rest dynamically from RemoteConfig

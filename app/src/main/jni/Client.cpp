@@ -652,6 +652,74 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     draw.DrawVerticalHealthBar(healthBarPos, healthBarHeight, 200.0f, data.health);
                 }
             }
+        } else {
+            // Draw simulated mock players for testing preview when not connected to daemon
+            int simulatedCount = 2;
+            for (int i = 0; i < simulatedCount; ++i) {
+                float headX, headY, bottomX, bottomY, distance, health;
+                const char* name;
+
+                if (i == 0) {
+                    headX = draw.getWidth() * 0.70f;
+                    headY = draw.getHeight() * 0.40f;
+                    bottomX = draw.getWidth() * 0.70f;
+                    bottomY = draw.getHeight() * 0.65f;
+                    distance = 45.0f;
+                    health = 200.0f;
+                    name = "Simulated Enemy 1";
+                } else {
+                    headX = draw.getWidth() * 0.30f;
+                    headY = draw.getHeight() * 0.30f;
+                    bottomX = draw.getWidth() * 0.30f;
+                    bottomY = draw.getHeight() * 0.75f;
+                    distance = 15.0f;
+                    health = 100.0f;
+                    name = "Simulated Enemy 2";
+                }
+
+                float scale = std::max(0.5f, std::min(1.0f, 500.0f / distance));
+                float boxHeight = abs(headY - bottomY) * scale;
+                float boxWidth = boxHeight * 0.50f;
+
+                Rect PlayerRect(headX - (boxWidth / 2), headY, boxWidth, boxHeight);
+
+                if (pEspPlayer.espLine) {
+                    Vector2 lineStart;
+                    Vector2 lineEnd(headX, headY);
+
+                    if (pEspPlayer.lineType == 0) {
+                        lineStart = Vector2(draw.getWidth() / 2, 0);
+                    } else if (pEspPlayer.lineType == 1) {
+                        lineStart = Vector2(draw.getWidth() / 2, draw.getHeight() / 2);
+                    } else {
+                        lineStart = Vector2(draw.getWidth() / 2, draw.getHeight());
+                        lineEnd = Vector2(bottomX, bottomY);
+                    }
+
+                    draw.DrawLine(pEspPlayer.espColor, 2, lineStart, lineEnd);
+                }
+
+                if (pEspPlayer.espBox) {
+                    if (pEspPlayer.boxType == 0) {
+                        draw.DrawBox(pEspPlayer.espColor, 1, PlayerRect);
+                    } else if (pEspPlayer.boxType == 1) {
+                        draw.DrawBox3D(pEspPlayer.espColor, 1, PlayerRect, 10);
+                    } else if (pEspPlayer.boxType == 2) {
+                        draw.DrawCornerBox(pEspPlayer.espColor, 1, PlayerRect, 4, 4);
+                    }
+                }
+
+                if (pEspPlayer.espNickName) {
+                    Vector2 namePos(headX, headY - 20);
+                    draw.DrawTextWithShadow(pEspPlayer.espColor, name, namePos, 16, Vector2(2, 2), 0.5f);
+                }
+
+                if (pEspPlayer.espHealth) {
+                    Vector2 healthBarPos(PlayerRect.x - 5.0f * scale, PlayerRect.y);
+                    float healthBarHeight = boxHeight;
+                    draw.DrawVerticalHealthBar(healthBarPos, healthBarHeight, 200.0f, health);
+                }
+            }
         }
 
 

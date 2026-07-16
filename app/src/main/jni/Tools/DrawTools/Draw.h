@@ -275,42 +275,23 @@ public:
 
 
     void DrawVerticalHealthBar(Vector2 screenPos, float boxHeight, float maxHealth, float currentHealth) {
-        float barWidth = 5.0f;
-        float borderThickness = 1.0f;
+        float barWidth = 7.0f;
+        float borderThickness = 1.5f;
 
         currentHealth = std::max(0.0f, std::min(currentHealth, maxHealth));
         float healthPercentage = currentHealth / maxHealth;
         float filledHeight = boxHeight * healthPercentage;
 
         // Draw background box (black)
-        DrawBox(Color(0, 0, 0, 255), 0, Rect(screenPos.X, screenPos.Y, barWidth, boxHeight));
+        DrawFilledRectinfo(Color(0, 0, 0, 255), Rect(screenPos.X, screenPos.Y, barWidth, boxHeight));
 
         // Determine fill color based on health percentage
         Color fillColor = (healthPercentage > 0.6f) ? Color(0, 255, 0, 255) :  // Green
                           (healthPercentage > 0.4f) ? Color(255, 255, 0, 255) : // Yellow
                           Color(255, 0, 0, 255);                               // Red
 
-        // Draw feathered glow around the filled health bar
-        int glowLayers = 4;              // Number of glow layers
-        float maxGlowSize = 6.0f;        // Max glow size around bar
-        for (int i = glowLayers; i > 0; --i) {
-            float glowSize = (maxGlowSize / glowLayers) * i;
-            uint8_t alpha = static_cast<uint8_t>(50 / i); // Decreasing alpha for outer glows
-
-            Color glowColor = fillColor;
-            glowColor.a = alpha;
-
-            // Draw glow rectangle larger than the filled bar, centered on it
-            DrawBox(glowColor, 0, Rect(
-                    screenPos.X + borderThickness - glowSize / 2.0f,
-                    screenPos.Y + boxHeight - filledHeight - glowSize / 2.0f,
-                    barWidth - 2.0f * borderThickness + glowSize,
-                    filledHeight + glowSize
-            ));
-        }
-
         // Draw main filled health bar
-        DrawBox(fillColor, 0, Rect(
+        DrawFilledRectinfo(fillColor, Rect(
                 screenPos.X + borderThickness,
                 screenPos.Y + boxHeight - filledHeight,
                 barWidth - 2.0f * borderThickness,

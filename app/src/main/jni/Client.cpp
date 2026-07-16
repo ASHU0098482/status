@@ -106,6 +106,10 @@ std::string LoggedInOwnerID = "";
 bool showAnimation = false;
 long long animationStartTime = 0;
 
+int frameCount = 0;
+float fpsValue = 0.0f;
+long long lastFpsTime = 0;
+
 long long getCurrentTimeMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
@@ -470,6 +474,21 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
 
     if (draw.isValid()) {
+        // Real-time FPS Calculation and Drawing in Bottom-Left Corner
+        long long currentTime = getCurrentTimeMs();
+        frameCount++;
+        if (currentTime - lastFpsTime >= 1000) {
+            fpsValue = frameCount * 1000.0f / (currentTime - lastFpsTime);
+            frameCount = 0;
+            lastFpsTime = currentTime;
+        }
+
+        char fpsText[32];
+        sprintf(fpsText, "FPS: %.1f", fpsValue);
+        Vector2 fpsPos(30.0f, (float)draw.getHeight() - 30.0f);
+        draw.DrawText(Color(0, 0, 0, 200), fpsText, Vector2(fpsPos.X + 1.5f, fpsPos.Y + 1.5f), 18.0f);
+        draw.DrawText(Color::Cyan(), fpsText, fpsPos, 18.0f);
+
         if (pEspPlayer.espDrawFov) {
             // Draw a Cyan circle with thicker line (4.0 thickness) at center of screen.
             // Radius scales dynamically with "Adjust Headshot Rate" (pAimbotPlayer.aimbotFOV: 0-100)
@@ -573,28 +592,28 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     }
 
                     if (IsCaido) {
-                        draw.DrawLine(Color::Red(), 2, lineStart, lineEnd);
+                        draw.DrawLine(Color::Red(), 3.5f, lineStart, lineEnd);
                     } else {
-                        draw.DrawLine(pEspPlayer.espColor, 2, lineStart, lineEnd);
+                        draw.DrawLine(pEspPlayer.espColor, 3.5f, lineStart, lineEnd);
                     }
                 }
 
                 if (pEspPlayer.espBox) {
                     if (IsCaido) {
                         if (pEspPlayer.boxType == 0) {
-                            draw.DrawBox(Color::Red(), 1, PlayerRect);
+                            draw.DrawBox(Color::Red(), 2.5f, PlayerRect);
                         } else if (pEspPlayer.boxType == 1) {
-                            draw.DrawBox3D(Color::Red(), 1, PlayerRect, 10);
+                            draw.DrawBox3D(Color::Red(), 2.5f, PlayerRect, 10);
                         } else if (pEspPlayer.boxType == 2) {
-                            draw.DrawCornerBox(Color::Red(), 1, PlayerRect, 4, 4);
+                            draw.DrawCornerBox(Color::Red(), 2.5f, PlayerRect, 4, 4);
                         }
                     } else {
                         if (pEspPlayer.boxType == 0) {
-                            draw.DrawBox(pEspPlayer.espColor, 1, PlayerRect);
+                            draw.DrawBox(pEspPlayer.espColor, 2.5f, PlayerRect);
                         } else if (pEspPlayer.boxType == 1) {
-                            draw.DrawBox3D(pEspPlayer.espColor, 1, PlayerRect, 10);
+                            draw.DrawBox3D(pEspPlayer.espColor, 2.5f, PlayerRect, 10);
                         } else if (pEspPlayer.boxType == 2) {
-                            draw.DrawCornerBox(pEspPlayer.espColor, 1, PlayerRect, 4, 4);
+                            draw.DrawCornerBox(pEspPlayer.espColor, 2.5f, PlayerRect, 4, 4);
                         }
                     }
                 }
@@ -666,7 +685,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     bottomY = draw.getHeight() * 0.65f;
                     distance = 45.0f;
                     health = 200.0f;
-                    name = "Simulated Enemy 1";
+                    name = "Training BOT 1";
                 } else {
                     headX = draw.getWidth() * 0.30f;
                     headY = draw.getHeight() * 0.30f;
@@ -674,7 +693,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     bottomY = draw.getHeight() * 0.75f;
                     distance = 15.0f;
                     health = 100.0f;
-                    name = "Simulated Enemy 2";
+                    name = "Training BOT 2";
                 }
 
                 float scale = std::max(0.5f, std::min(1.0f, 500.0f / distance));
@@ -696,16 +715,16 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                         lineEnd = Vector2(bottomX, bottomY);
                     }
 
-                    draw.DrawLine(pEspPlayer.espColor, 2, lineStart, lineEnd);
+                    draw.DrawLine(pEspPlayer.espColor, 3.5f, lineStart, lineEnd);
                 }
 
                 if (pEspPlayer.espBox) {
                     if (pEspPlayer.boxType == 0) {
-                        draw.DrawBox(pEspPlayer.espColor, 1, PlayerRect);
+                        draw.DrawBox(pEspPlayer.espColor, 2.5f, PlayerRect);
                     } else if (pEspPlayer.boxType == 1) {
-                        draw.DrawBox3D(pEspPlayer.espColor, 1, PlayerRect, 10);
+                        draw.DrawBox3D(pEspPlayer.espColor, 2.5f, PlayerRect, 10);
                     } else if (pEspPlayer.boxType == 2) {
-                        draw.DrawCornerBox(pEspPlayer.espColor, 1, PlayerRect, 4, 4);
+                        draw.DrawCornerBox(pEspPlayer.espColor, 2.5f, PlayerRect, 4, 4);
                     }
                 }
 

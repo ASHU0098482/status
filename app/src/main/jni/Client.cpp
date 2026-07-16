@@ -15,6 +15,7 @@
 #include "Tools/SOCKET/IncludeClient.h"
 #include "Widgets/ImportWidgets.h"
 #include "Tools/DrawTools/Draw.h"
+#include <chrono>
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_ashu_Menu_imageBase64(JNIEnv* env, jobject thiz) {
@@ -102,6 +103,15 @@ using namespace std;
 
 std::string LoggedInOwnerID = "";
 
+bool showAnimation = false;
+long long animationStartTime = 0;
+
+long long getCurrentTimeMs() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+}
+
 // Called from Java to send owner ID
 
 // Show toast from native
@@ -186,6 +196,13 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
 
                 MasterBool.ultraswitch = !MasterBool.ultraswitch;
                 SendFeatuere(212, MasterBool.ultraswitch);
+
+                if (pAimbotPlayer.enableAimbot) {
+                    showAnimation = true;
+                    animationStartTime = getCurrentTimeMs();
+                } else {
+                    showAnimation = false;
+                }
             } else {
                 ShowErrorToast(env, "VIP PANEL ALWAYS ON TOP ✅.   ");
                 LOGD("❌ BLOCKED: Owner ID mismatch! Found: %s", LoggedInOwnerID.c_str());
@@ -449,15 +466,58 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
     if (draw.isValid()) {
         if (pEspPlayer.espDrawFov) {
-            // Draw a small fixed red circle at center of screen (not too big, not too small)
-            draw.DrawCircle(Color::Red(), 2, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 80.0f);
+            // Draw a Cyan circle with thicker line (4.0 thickness) at center of screen.
+            // Radius scales dynamically with "Adjust Headshot Rate" (pAimbotPlayer.aimbotFOV: 0-100)
+            float radius = 50.0f + (pAimbotPlayer.aimbotFOV * 4.0f);
+            draw.DrawCircle(Color::Cyan(), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // Show "Welcome to VIP Panel" overlay when Activate All is ON
-        if (pAimbotPlayer.enableAimbot) {
-            Vector2 welcomePos(draw.getWidth() / 2 - 120, 100);
-            draw.DrawText(Color(0, 0, 0, 200), "Welcome to VIP Panel", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
-            draw.DrawText(Color::Red(), "Welcome to VIP Panel", welcomePos, 20.0f);
+        // --- Premium Intro Animation ---
+        if (showAnimation) {
+            long long elapsed = getCurrentTimeMs() - animationStartTime;
+
+            if (elapsed < 1200) {
+                // Phase 1: Full black screen, center displays the skull logo
+                draw.DrawBlackScreen(255);
+                draw.DrawLogo(draw.getWidth() / 2, draw.getHeight() / 2, 180.0f, 180.0f, 255.0f);
+            }
+            else if (elapsed < 2400) {
+                // Phase 2: Full black screen, logo disappears, bold red text "VIP PANEL" at center
+                draw.DrawBlackScreen(255);
+                // Center bold text
+                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60 + 1, draw.getHeight() / 2 + 1), 32.0f);
+                draw.DrawText(Color::Red(), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60, draw.getHeight() / 2), 32.0f);
+            }
+            else if (elapsed < 3800) {
+                // Phase 3: Black screen fades to transparent, and "VIP PANEL" text slides from center to final top position
+                float progress = (elapsed - 2400) / 1400.0f; // 0.0 to 1.0
+                if (progress > 1.0f) progress = 1.0f;
+
+                int screenAlpha = (int)(255 * (1.0f - progress));
+                draw.DrawBlackScreen(screenAlpha);
+
+                // Smoothly interpolate Y position from center to top (Y = 100)
+                float startY = draw.getHeight() / 2.0f;
+                float endY = 100.0f;
+                float currentY = startY + (endY - startY) * progress;
+
+                // Smoothly interpolate size from 32 to 20
+                float currentSize = 32.0f + (20.0f - 32.0f) * progress;
+
+                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60 + 1, currentY + 1), currentSize);
+                draw.DrawText(Color::Red(), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60, currentY), currentSize);
+            }
+            else {
+                // Animation finished!
+                showAnimation = false;
+            }
+        }
+
+        // Show "VIP PANEL" overlay when Activate All is ON and animation is not running
+        if (pAimbotPlayer.enableAimbot && !showAnimation) {
+            Vector2 welcomePos(draw.getWidth() / 2 - 60, 100);
+            draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
+            draw.DrawText(Color::Red(), "VIP PANEL", welcomePos, 20.0f);
         }
 
         Response response = getData(draw.getWidth(), draw.getHeight());

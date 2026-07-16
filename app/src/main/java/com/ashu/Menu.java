@@ -116,6 +116,8 @@ public class Menu {
     }
 
 
+    public static android.graphics.Bitmap logoBitmap;
+
     // Criar Template
     public void onCreateTemplate() {
         // Improved rounded corners for better visibility
@@ -153,8 +155,8 @@ public class Menu {
         android.graphics.drawable.Drawable placeholderDrawable = null;
         try {
             byte[] decodeImageBase64 = android.util.Base64.decode(imageBase64(), android.util.Base64.DEFAULT);
-            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeByteArray(decodeImageBase64, 0, decodeImageBase64.length);
-            placeholderDrawable = new android.graphics.drawable.BitmapDrawable(context.getResources(), bitmap);
+            logoBitmap = android.graphics.BitmapFactory.decodeByteArray(decodeImageBase64, 0, decodeImageBase64.length);
+            placeholderDrawable = new android.graphics.drawable.BitmapDrawable(context.getResources(), logoBitmap);
         } catch (Exception e) {
             e.printStackTrace();
         }

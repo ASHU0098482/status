@@ -99,6 +99,15 @@ public class DrawView extends View implements Runnable {
         cvs.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
     }
 
+    public void DrawLogo(Canvas cvs, float posX, float posY, float width, float height, float alpha) {
+        if (Menu.logoBitmap != null) {
+            Paint p = new Paint(mBitMapPaint);
+            p.setAlpha((int) alpha);
+            android.graphics.RectF dst = new android.graphics.RectF(posX - width / 2, posY - height / 2, posX + width / 2, posY + height / 2);
+            cvs.drawBitmap(Menu.logoBitmap, null, dst, p);
+        }
+    }
+
     public void DrawLine(Canvas cvs, int a, int r, int g, int b, float lineWidth, float fromX, float fromY, float toX, float toY) {
         mStrokePaint.setColor(Color.rgb(r, g, b));
         mStrokePaint.setAlpha(a);

@@ -159,6 +159,28 @@ public:
         }
     }
 
+    void DrawLogo(float posX, float posY, float width, float height, float alpha) {
+        if (isValid()) {
+            jclass canvasView = _env->GetObjectClass(_cvsView);
+            jmethodID drawlogo = _env->GetMethodID(canvasView, "DrawLogo",
+                                                   "(Landroid/graphics/Canvas;FFFFF)V");
+            if (drawlogo) {
+                _env->CallVoidMethod(_cvsView, drawlogo, _cvs, posX, posY, width, height, alpha);
+            }
+        }
+    }
+
+    void DrawBlackScreen(int alpha) {
+        if (isValid()) {
+            jclass canvasView = _env->GetObjectClass(_cvsView);
+            jmethodID drawfilledrectinfo = _env->GetMethodID(canvasView, "DrawFilledRectInfo",
+                                                             "(Landroid/graphics/Canvas;IIIIFFFF)V");
+            if (drawfilledrectinfo) {
+                _env->CallVoidMethod(_cvsView, drawfilledrectinfo, _cvs, alpha, 0, 0, 0, 0.0f, 0.0f, (float)getWidth(), (float)getHeight());
+            }
+        }
+    }
+
     void DrawFilledCircle(Color color, Vector2 pos, float radius) {
         if (isValid()) {
             jclass canvasView = _env->GetObjectClass(_cvsView);

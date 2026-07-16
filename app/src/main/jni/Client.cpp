@@ -448,6 +448,18 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
 
     if (draw.isValid()) {
+        if (pEspPlayer.espDrawFov) {
+            // Draw a small fixed red circle at center of screen (not too big, not too small)
+            draw.DrawCircle(Color::Red(), 2, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 80.0f);
+        }
+
+        // Show "Welcome to VIP Panel" overlay when Activate All is ON
+        if (pAimbotPlayer.enableAimbot) {
+            Vector2 welcomePos(draw.getWidth() / 2 - 120, 100);
+            draw.DrawText(Color(0, 0, 0, 200), "Welcome to VIP Panel", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
+            draw.DrawText(Color::Red(), "Welcome to VIP Panel", welcomePos, 20.0f);
+        }
+
         Response response = getData(draw.getWidth(), draw.getHeight());
 
         if (response.Success) {
@@ -473,18 +485,6 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
                 // Adjust position for head alignment
                 Rect PlayerRect(HeadLoc.X - (boxWidth / 2), draw.getHeight() - HeadLoc.Y, boxWidth, boxHeight);
-
-                if (pEspPlayer.espDrawFov) {
-                    // Draw a small fixed red circle at center of screen
-                    draw.DrawCircle(Color::Red(), 2, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 60);
-                }
-
-                // Show "Welcome to VIP Panel" overlay when Activate All is ON
-                if (pAimbotPlayer.enableAimbot && i == 0) {
-                    Vector2 welcomePos(draw.getWidth() / 2 - 120, 50);
-                    draw.DrawText(Color(0, 0, 0, 200), "Welcome to VIP Panel", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
-                    draw.DrawText(Color::Red(), "Welcome to VIP Panel", welcomePos, 20.0f);
-                }
 
                 if (pEspPlayer.espLine) {
                     Vector2 lineStart;

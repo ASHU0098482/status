@@ -484,9 +484,9 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             else if (elapsed < 2400) {
                 // Phase 2: Full black screen, logo disappears, bold red text "VIP PANEL" at center
                 draw.DrawBlackScreen(255);
-                // Center bold text
-                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60 + 1, draw.getHeight() / 2 + 1), 32.0f);
-                draw.DrawText(Color::Red(), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60, draw.getHeight() / 2), 32.0f);
+                // Center bold text (size 70.0f)
+                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 + 2, draw.getHeight() / 2 + 2), 70.0f);
+                draw.DrawText(Color::Red(), "VIP PANEL", Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 70.0f);
             }
             else if (elapsed < 3800) {
                 // Phase 3: Black screen fades to transparent, and "VIP PANEL" text slides from center to final top position
@@ -496,16 +496,22 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 int screenAlpha = (int)(255 * (1.0f - progress));
                 draw.DrawBlackScreen(screenAlpha);
 
-                // Smoothly interpolate Y position from center to top (Y = 100)
+                // Smoothly interpolate Y position from center to top (Y = 120)
                 float startY = draw.getHeight() / 2.0f;
-                float endY = 100.0f;
+                float endY = 120.0f;
                 float currentY = startY + (endY - startY) * progress;
 
-                // Smoothly interpolate size from 32 to 20
-                float currentSize = 32.0f + (20.0f - 32.0f) * progress;
+                // Smoothly interpolate size from 70 to 45
+                float currentSize = 70.0f + (45.0f - 70.0f) * progress;
 
-                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60 + 1, currentY + 1), currentSize);
-                draw.DrawText(Color::Red(), "VIP PANEL", Vector2(draw.getWidth() / 2 - 60, currentY), currentSize);
+                // Color interpolates from Red to Cyan
+                int r = (int)(255 * (1.0f - progress));
+                int g = (int)(255 * progress);
+                int b = (int)(255 * progress);
+                Color currentColor = Color(r, g, b, 255);
+
+                draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(draw.getWidth() / 2 + 2, currentY + 2), currentSize);
+                draw.DrawText(currentColor, "VIP PANEL", Vector2(draw.getWidth() / 2, currentY), currentSize);
             }
             else {
                 // Animation finished!
@@ -515,9 +521,9 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
         // Show "VIP PANEL" overlay when Activate All is ON and animation is not running
         if (pAimbotPlayer.enableAimbot && !showAnimation) {
-            Vector2 welcomePos(draw.getWidth() / 2 - 60, 100);
-            draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
-            draw.DrawText(Color::Red(), "VIP PANEL", welcomePos, 20.0f);
+            Vector2 welcomePos(draw.getWidth() / 2, 120);
+            draw.DrawText(Color(0, 0, 0, 200), "VIP PANEL", Vector2(welcomePos.X + 2, welcomePos.Y + 2), 45.0f);
+            draw.DrawText(Color::Cyan(), "VIP PANEL", welcomePos, 45.0f);
         }
 
         Response response = getData(draw.getWidth(), draw.getHeight());

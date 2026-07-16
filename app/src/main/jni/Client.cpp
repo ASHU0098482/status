@@ -154,49 +154,19 @@ Java_com_ashu_Menu_Functions(JNIEnv *env, jclass clazz) {
     // ---------------- Aim Features ----------------
     widget.Category(OBFUSCATE("Aimbot Features"));
     widget.Switch(OBFUSCATE("Activate All"), 102);
-    //  widget.Switch(OBFUSCATE("AimBot Body"), 21);
-    widget.Switch(OBFUSCATE("AimKill"), 103);
-    widget.Switch(OBFUSCATE("AimKill 360"), 1055);
-    //  widget.Switch(OBFUSCATE("AimSilent"), 22);
-    //   widget.Switch(OBFUSCATE("AimSilent 360"), 1056);
-    widget.Switch(OBFUSCATE("Tele Kill 10m ( risk)"), 500);
+    widget.Switch(OBFUSCATE("Silent Aim"), 103);
+    widget.Switch(OBFUSCATE("Drag Headshot"), 1055);
+    widget.Switch(OBFUSCATE("Sniper Auto Aim"), 500);
     widget.Switch(OBFUSCATE("Up Player"), 20);
     widget.Switch(OBFUSCATE("Show Fov"), 16);
-    widget.SeekBar(OBFUSCATE("Fov Size"), 0, 999, "x", 104);
-
-    // ---------------- Misc Features ----------------
-    widget.Category(OBFUSCATE("Misc"));
-    widget.Switch(OBFUSCATE("Joystick Speed"), 15);
-    widget.Switch(OBFUSCATE("Shake Kill"), 502);
-    widget.Switch(OBFUSCATE("Shake Kill Max"), 503);
-    // widget.Switch(OBFUSCATE("Shake Kill Pro Max"), 506);
-    // widget.Switch(OBFUSCATE("Climb Up"), 509);
-    widget.Switch(OBFUSCATE("Teleport"), 550);
-    widget.Switch(OBFUSCATE("Down Kill"), 504);
-    widget.Switch(OBFUSCATE("Auto Switch"), 505);
-
-    // ---------------- Other Features ----------------
-    widget.Category(OBFUSCATE("Others"));
-    widget.Switch(OBFUSCATE("Ultra Switch"), 10);
-    widget.Switch(OBFUSCATE("Medikit Run"), 13);
-    widget.Switch(OBFUSCATE("Camera Up"), 1111);
-
-    widget.Switch(OBFUSCATE("Reset Guest"), 12);
+    widget.SeekBar(OBFUSCATE("Adjust Headshot Rate"), 0, 100, "%", 104);
 
     // ---------------- ESP Features ----------------
     widget.Category(OBFUSCATE("ESP"));
     widget.Switch(OBFUSCATE("ESP Line"), 1);
     widget.Switch(OBFUSCATE("ESP Box"), 2);
     widget.Switch(OBFUSCATE("ESP Name"), 4);
-    widget.Switch(OBFUSCATE("ESP Distance"), 33333);
     widget.Switch(OBFUSCATE("ESP Health"), 9);
-    widget.Switch(OBFUSCATE("ESP Line Tracker"), 144);
-     widget.Switch(OBFUSCATE("ESP Name Tracker"), 14);
-
-    // widget.Category(OBFUSCATE("ESP Configurations"));
-    // widget.SeekBar(OBFUSCATE("ESP Color Mode"), 0, 0, OBFUSCATE("Color"), 5);
-    //widget.SeekBar(OBFUSCATE("ESP Line Style"), 0, 0, OBFUSCATE("LineType"), 6);
-    // widget.SeekBar(OBFUSCATE("ESP Box Style"), 0, 0, OBFUSCATE("BoxType"), 7);
 }
 
 
@@ -505,7 +475,15 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 Rect PlayerRect(HeadLoc.X - (boxWidth / 2), draw.getHeight() - HeadLoc.Y, boxWidth, boxHeight);
 
                 if (pEspPlayer.espDrawFov) {
-                    draw.DrawCircle(pEspPlayer.espnameColor, 1, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), pAimbotPlayer.aimbotFOV);
+                    // Draw a small fixed red circle at center of screen
+                    draw.DrawCircle(Color::Red(), 2, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 60);
+                }
+
+                // Show "Welcome to VIP Panel" overlay when Activate All is ON
+                if (pAimbotPlayer.enableAimbot && i == 0) {
+                    Vector2 welcomePos(draw.getWidth() / 2 - 120, 50);
+                    draw.DrawText(Color(0, 0, 0, 200), "Welcome to VIP Panel", Vector2(welcomePos.X + 1, welcomePos.Y + 1), 20.0f);
+                    draw.DrawText(Color::Red(), "Welcome to VIP Panel", welcomePos, 20.0f);
                 }
 
                 if (pEspPlayer.espLine) {
@@ -606,67 +584,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
         }
 
 
-        if (pEspPlayer.espLineTracker) {
-
-            float minDist = 1e9;
-            PlayerData* closest = nullptr;
-            for (int i = 0; i < response.PlayerCount; ++i) {
-                PlayerData* pdata = &response.Players[i];
-                if (pdata->isDieing) continue;
-                if (pdata->distance < minDist) {
-                    minDist = pdata->distance;
-                    closest = pdata;
-                }
-            }
-            if (closest) {
-                Vector3 HeadLoc = closest->headPosition;
-                Vector2 crosshair(draw.getWidth() / 2, draw.getHeight() / 2);
-                Vector2 enemyHead(HeadLoc.X, draw.getHeight() - HeadLoc.Y);
-                draw.DrawLine(Color::White(), 2, crosshair, enemyHead);
-            }
-        }
-        if (pEspPlayer.espTracker && response.Success) {
-            float minDist = FLT_MAX;
-            PlayerData* closest = nullptr;
-
-            // 🔍 Find nearest alive player
-            for (int i = 0; i < response.PlayerCount; ++i) {
-                PlayerData& pdata = response.Players[i];
-                bool isAlive = !pdata.isDieing && pdata.health > 0 && pdata.headPosition.Z > 0;
-
-                if (isAlive && pdata.distance < minDist) {
-                    minDist = pdata.distance;
-                    closest = &pdata;
-                }
-            }
-
-            if (closest != nullptr) {
-                // 🎨 Distance-based text color
-                Color textColor = Color::White();
-                if (closest->distance <= 30)
-                    textColor = Color(255, 0, 0, 255);   // 🔴 Red
-                else if (closest->distance <= 50)
-                    textColor = Color(255, 255, 0, 255); // 🟡 Yellow
-                else if (closest->distance <= 80)
-                    textColor = Color(0, 191, 255, 255); // 🔵 Light Blue
-                else
-                    textColor = Color(144, 238, 144, 255); // 🟢 Light Green
-
-                // 📛 HUD text: 🎯 EnemyName - 100m
-                const char* name = (strlen(closest->name) > 0) ? closest->name : "Enemy";
-                char hudText[64];
-                sprintf(hudText, "🎯 %s - %dm", name, (int)closest->distance);
-
-                // 📍 Position center bottom
-                int textLength = strlen(hudText);
-                float textOffset = textLength * 4.5f; // adjust if needed
-                Vector2 centerPos((draw.getWidth() / 2.0f) - textOffset, draw.getHeight() - 95.0f);
-
-                // 🖤 Shadow + main text
-                draw.DrawText(Color(0, 0, 0, 180), hudText, Vector2(centerPos.X + 1, centerPos.Y + 1), 18.0f);
-                draw.DrawText(textColor, hudText, centerPos, 18.0f);
-            }
-        }
+        // ESP Line Tracker and Name Tracker removed as per user request
 
     }
 }

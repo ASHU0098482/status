@@ -237,22 +237,6 @@ public class MainActivity extends Activity {
                 return;
             }
         }
-        checkStoragePermission();
-    }
-
-    private void checkStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-                Toast.makeText(this, "Storage permission is required!", Toast.LENGTH_SHORT).show();
-                requestPermissions(new String[]{
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                }, STORAGE_PERMISSION_REQUEST_CODE);
-                return;
-            }
-        }
         startLogin();
     }
 
@@ -269,21 +253,7 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "Overlay permission denied! Exiting...", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
-                checkStoragePermission();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == STORAGE_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startLogin();
-            } else {
-                Toast.makeText(this, "Storage permission denied! Exiting...", Toast.LENGTH_SHORT).show();
-                finish();
             }
         }
     }

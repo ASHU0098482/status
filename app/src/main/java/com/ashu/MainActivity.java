@@ -146,7 +146,7 @@ public class MainActivity extends Activity {
 
     public void downloadAndInstallApk(final String apkUrl) {
         final String downloadUrl = (apkUrl != null && !apkUrl.isEmpty())
-            ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/VIP_PANEL.apk";
+            ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/JACK_PANEL.apk";
         android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
         String dialogTitle = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
             ? RemoteConfig.noticeTitle : "🔄 Auto Updating APK...";
@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
             try {
                 java.io.File updatesDir = new java.io.File(getExternalFilesDir(null), "updates");
                 if (!updatesDir.exists()) updatesDir.mkdirs();
-                java.io.File apkFile = new java.io.File(updatesDir, "VIP_PANEL_update.apk");
+                java.io.File apkFile = new java.io.File(updatesDir, "JACK_PANEL_update.apk");
                 if (apkFile.exists()) apkFile.delete();
 
                 String currentUrl = downloadUrl;

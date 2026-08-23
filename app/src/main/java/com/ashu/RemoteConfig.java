@@ -42,8 +42,10 @@ public class RemoteConfig {
             BufferedReader reader = null;
             boolean success = false;
             
-            // Use direct GitHub raw with fresh timestamp to avoid any caching
+            // Try jsdelivr CDN first for instant updates + direct GitHub raw with timestamp
             String[] urlsToTry = new String[] {
+                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis(),
+                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json",
                 CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000),
                 CONFIG_URL + "?nocache=" + System.currentTimeMillis()
             };

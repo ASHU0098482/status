@@ -252,21 +252,9 @@ public class MainActivity extends Activity {
             return;
         }
 
-        // Loop prevention check: Verify if downloaded APK is actually newer than current installed version
-        int localVersion = 1;
         try {
-            localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-            android.content.pm.PackageInfo downloadedPkgInfo = getPackageManager()
-                    .getPackageArchiveInfo(apkFile.getAbsolutePath(), 0);
-            if (downloadedPkgInfo != null && downloadedPkgInfo.versionCode <= localVersion) {
-                // Downloaded APK is not newer (e.g. stale CDN cache). Break loop immediately!
-                Toast.makeText(this, "App is already up to date.", Toast.LENGTH_SHORT).show();
-                showFirstSplash();
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            apkFile.setReadable(true, false);
+        } catch (Exception ignored) {}
 
         // 1. Try silent root install if root is available
         try {
@@ -299,7 +287,7 @@ public class MainActivity extends Activity {
                 try {
                     Intent permIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()));
                     startActivityForResult(permIntent, INSTALL_UNKNOWN_APPS_REQUEST_CODE);
-                    return; // Wait for user to grant permission and return
+                    return;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -313,30 +301,20 @@ public class MainActivity extends Activity {
     private void launchPackageInstaller(java.io.File apkFile) {
         if (apkFile == null || !apkFile.exists()) return;
         try {
+            apkFile.setReadable(true, false);
             Intent intent = new Intent(Intent.ACTION_VIEW);
             android.net.Uri apkUri;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 apkUri = androidx.core.content.FileProvider.getUriForFile(
                     this, getPackageName() + ".provider", apkFile);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
             } else {
                 apkUri = android.net.Uri.fromFile(apkFile);
             }
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-            // Grant URI read permissions explicitly to package installer handlers
-            java.util.List<android.content.pm.ResolveInfo> resolveInfoList = getPackageManager()
-                    .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-            if (resolveInfoList != null) {
-                for (android.content.pm.ResolveInfo resolveInfo : resolveInfoList) {
-                    String pkg = resolveInfo.activityInfo.packageName;
-                    grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                }
-            }
-
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            finish();
         } catch (Exception e) {
             Toast.makeText(this, "Install failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             showFirstSplash();

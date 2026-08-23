@@ -513,6 +513,12 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
     }
 
     if (draw.isValid()) {
+        // Automatically start signature key intro animation on initial load after login
+        if (animationStartTime == 0) {
+            animationStartTime = getCurrentTimeMs();
+            showAnimation = true;
+        }
+
         // Real-time FPS Calculation and Drawing in Bottom-Left Corner
         long long currentTime = getCurrentTimeMs();
         frameCount++;

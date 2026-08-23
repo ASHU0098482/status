@@ -26,7 +26,7 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 60;
+    public static int remoteVersionCode = 70;
     public static String updateUrl = "";
 
     public static boolean showWebsiteBanner = false;

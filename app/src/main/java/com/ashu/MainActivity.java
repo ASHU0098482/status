@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
                 }
 
                 if (RemoteConfig.remoteVersionCode > localVersion) {
-                    downloadAndInstallApk(RemoteConfig.updateUrl);
+                    showUpdateDialog(RemoteConfig.updateUrl);
                     return;
                 }
 
@@ -80,6 +80,30 @@ public class MainActivity extends Activity {
                 }
             });
         });
+    }
+
+    public void showUpdateDialog(final String updateUrl) {
+        final String validUpdateUrl = (updateUrl != null && !updateUrl.isEmpty())
+            ? updateUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/JACK_PANEL.apk";
+        String msg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) 
+            ? RemoteConfig.noticeMessage + "\n\nTap 'UPDATE NOW' to download and install from GitHub."
+            : "A new update is available on GitHub. Tap 'UPDATE NOW' to download and install.";
+        String title = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
+            ? RemoteConfig.noticeTitle : "🔄 Update Available!";
+        new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle(title)
+            .setMessage(msg)
+            .setCancelable(false)
+            .setPositiveButton("UPDATE NOW", (d, which) -> {
+                d.dismiss();
+                downloadAndInstallApk(validUpdateUrl);
+            })
+            .setNegativeButton("EXIT", (d, which) -> {
+                d.dismiss();
+                finishAffinity();
+            })
+            .create()
+            .show();
     }
 
     private void showNoticeDialog(String title, String message, Runnable onContinue) {
@@ -121,9 +145,9 @@ public class MainActivity extends Activity {
                 }
 
                 if (RemoteConfig.remoteVersionCode > localVersion) {
-                    downloadAndInstallApk(RemoteConfig.updateUrl);
+                    showUpdateDialog(RemoteConfig.updateUrl);
                 } else if (showToastIfUpToDate) {
-                    Toast.makeText(MainActivity.this, "App is up to date!", Toast.LENGTH_SHORT).show();
+                    showUpdateDialog(RemoteConfig.updateUrl);
                 }
             });
         });

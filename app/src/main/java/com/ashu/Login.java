@@ -315,9 +315,24 @@ public class Login {
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         btnParams.gravity = Gravity.CENTER_HORIZONTAL;
-        btnParams.setMargins(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(4));
+        btnParams.setMargins(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(2));
         loginButton.setLayoutParams(btnParams);
         card.addView(loginButton);
+
+        // Update APK Button
+        Button updateBtn = new Button(context);
+        updateBtn.setText("🔄 UPDATE NOW");
+        updateBtn.setTextColor(Color.parseColor("#FFB800"));
+        updateBtn.setTextSize(11.5f);
+        updateBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        updateBtn.setBackgroundColor(Color.TRANSPARENT);
+        updateBtn.setPadding(0, new Utils(context).FixDP(2), 0, new Utils(context).FixDP(2));
+        updateBtn.setOnClickListener(v -> {
+            if (context instanceof MainActivity) {
+                ((MainActivity) context).checkForUpdates(true);
+            }
+        });
+        card.addView(updateBtn);
 
         // Loading indicator
         LinearLayout loadingLayout = new LinearLayout(context);

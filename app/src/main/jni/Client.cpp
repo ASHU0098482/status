@@ -545,7 +545,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // --- Ultra-Smooth Cursive Signature Writing Animation (5-6 sec total) ---
+        // --- Ultra-Smooth Cursive Signature Writing Animation (Exactly 3.0 sec total) ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
             Vector2 centerPos(draw.getWidth() / 2.0f, draw.getHeight() / 2.0f);
@@ -554,12 +554,12 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 signatureSize = 240.0f;
             }
 
-            long long writeDuration = 3800; // 3.8s slow, graceful letter-by-letter handwriting sweep
-            long long holdDuration = 1400;  // 1.4s glowing neon hold
-            long long fadeDuration = 1200;  // 1.2s smooth dissolve into game
+            long long writeDuration = 1900; // 1.9s graceful letter-by-letter handwriting sweep + swash
+            long long holdDuration = 600;   // 0.6s glowing neon hold with breathing pulse
+            long long fadeDuration = 500;   // 0.5s smooth dissolve into game
 
             if (elapsed < writeDuration) {
-                // Phase 1: Real-time cursive handwriting animation (A D M I N written letter by letter with glowing spark tip)
+                // Phase 1: Real-time cursive handwriting animation (letter-by-letter with glowing fountain pen spark nib)
                 draw.DrawBlackScreen(255);
                 float linearProgress = (float)elapsed / (float)writeDuration;
                 draw.DrawSmoothSignatureWriting(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize, linearProgress);
@@ -568,8 +568,8 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 // Phase 2: Complete signature text glowing brightly at center with subtle breathing pulse
                 draw.DrawBlackScreen(255);
                 long long holdElapsed = elapsed - writeDuration;
-                float pulse = 0.5f + 0.5f * sinf((float)holdElapsed / 240.0f);
-                int glowAlpha = 225 + (int)(30.0f * pulse);
+                float pulse = 0.5f + 0.5f * sinf((float)holdElapsed / 95.0f);
+                int glowAlpha = 230 + (int)(25.0f * pulse);
                 draw.DrawSmoothSignatureWriting(Color(255, 255, 255, glowAlpha), userLicenseKey.c_str(), centerPos, signatureSize, 1.0f);
             }
             else if (elapsed < writeDuration + holdDuration + fadeDuration) {

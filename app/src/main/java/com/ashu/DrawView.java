@@ -20,6 +20,12 @@ public class DrawView extends View implements Runnable {
     Paint mRectPaint2;
     Paint mSignaturePaint;
     Typeface mSignatureTypeface;
+    Paint mSwashPaint;
+    Paint mPenTipPaint;
+    Paint mPenGlowPaint;
+    Paint mSparkPaint;
+    android.graphics.Path mClipPath = new android.graphics.Path();
+    android.graphics.Path mSwashPath = new android.graphics.Path();
 
     Thread mThread;
     int FPS = 240;
@@ -98,13 +104,31 @@ public class DrawView extends View implements Runnable {
 
         mSignaturePaint = new Paint();
         mSignaturePaint.setAntiAlias(true);
-        mSignaturePaint.setTextAlign(Paint.Align.CENTER);
+        mSignaturePaint.setTextAlign(Paint.Align.LEFT);
         try {
             mSignatureTypeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/signature.ttf");
             mSignaturePaint.setTypeface(mSignatureTypeface);
         } catch (Exception e) {
             mSignaturePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.ITALIC));
         }
+
+        mSwashPaint = new Paint();
+        mSwashPaint.setAntiAlias(true);
+        mSwashPaint.setStyle(Paint.Style.STROKE);
+        mSwashPaint.setStrokeCap(Paint.Cap.ROUND);
+        mSwashPaint.setStrokeJoin(Paint.Join.ROUND);
+
+        mPenTipPaint = new Paint();
+        mPenTipPaint.setAntiAlias(true);
+        mPenTipPaint.setStyle(Paint.Style.FILL);
+
+        mPenGlowPaint = new Paint();
+        mPenGlowPaint.setAntiAlias(true);
+        mPenGlowPaint.setStyle(Paint.Style.FILL);
+
+        mSparkPaint = new Paint();
+        mSparkPaint.setAntiAlias(true);
+        mSparkPaint.setStyle(Paint.Style.FILL);
     }
 
     public void ClearCanvas(Canvas cvs) {
@@ -125,57 +149,177 @@ public class DrawView extends View implements Runnable {
     }
 
     public void DrawSmoothSignatureWriting(Canvas cvs, int a, int r, int g, int b, String txt, float posX, float posY, float size, float progress) {
-        if (txt == null || txt.isEmpty() || progress <= 0f) return;
+        if (txt == null || txt.isEmpty() || progress <= 0f || a <= 0) return;
+
         mSignaturePaint.setColor(Color.rgb(r, g, b));
         mSignaturePaint.setAlpha(a);
         mSignaturePaint.setTextSize(size);
         mSignaturePaint.setFakeBoldText(true);
         mSignaturePaint.setTextAlign(Paint.Align.LEFT);
-        mSignaturePaint.setShadowLayer(30.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
 
-        float yPos = posY - ((mSignaturePaint.descent() + mSignaturePaint.ascent()) / 2f);
-        float totalWidth = mSignaturePaint.measureText(txt);
-        float startX = posX - (totalWidth / 2f);
         int totalLen = txt.length();
+        float[] charWidths = new float[totalLen];
+        mSignaturePaint.getTextWidths(txt, charWidths);
+
+        float totalWidth = 0f;
+        for (int i = 0; i < totalLen; i++) {
+            totalWidth += charWidths[i];
+        }
+
+        float startX = posX - (totalWidth / 2f);
+        float yPos = posY - ((mSignaturePaint.descent() + mSignaturePaint.ascent()) / 2f);
+
+        float swashStartX = startX - (size * 0.10f);
+        float swashTotalWidth = totalWidth + (size * 0.25f);
+        float swashBaseY = yPos + (size * 0.36f);
+        float swashDepth = size * 0.14f;
+
+        // Progress split: 0.0 -> 0.82 is letter-by-letter handwriting, 0.82 -> 1.0 is underline swash flourish
+        float textPhaseEnd = 0.82f;
 
         if (progress >= 1.0f) {
+            // Full glowing signature rendering
+            mSignaturePaint.setShadowLayer(32.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
             cvs.drawText(txt, startX, yPos, mSignaturePaint);
+            mSignaturePaint.clearShadowLayer();
+            cvs.drawText(txt, startX, yPos, mSignaturePaint);
+
+            // Full underline flourish
+            drawSignatureFlourish(cvs, a, r, g, b, swashStartX, swashTotalWidth, swashBaseY, swashDepth, size, 1.0f);
         } else {
             float clampedProgress = Math.max(0.001f, Math.min(0.999f, progress));
-            float charProgress = clampedProgress * totalLen;
-            int completedChars = (int) Math.floor(charProgress);
-            float currentLetterFraction = charProgress - completedChars;
+            float penX = startX;
+            float penY = yPos;
 
-            int renderCharCount = Math.min(completedChars + 1, totalLen);
-            String partialText = txt.substring(0, renderCharCount);
+            if (clampedProgress < textPhaseEnd) {
+                // Phase 1: Letter-by-letter handwriting progression
+                float textProgress = clampedProgress / textPhaseEnd;
+                float charProgress = textProgress * totalLen;
+                int activeChar = Math.min((int) Math.floor(charProgress), totalLen - 1);
+                float letterFrac = charProgress - activeChar;
 
-            float prevWidth = completedChars > 0 ? mSignaturePaint.measureText(txt.substring(0, completedChars)) : 0f;
-            float currentLetterWidth = mSignaturePaint.measureText(txt.substring(0, renderCharCount)) - prevWidth;
-            float currentRevealX = startX + prevWidth + (currentLetterWidth * currentLetterFraction);
+                float currentLetterStartX = startX;
+                for (int i = 0; i < activeChar; i++) {
+                    currentLetterStartX += charWidths[i];
+                }
+                float currentLetterWidth = charWidths[activeChar];
 
-            cvs.save();
-            cvs.clipRect(startX - 50f, posY - size * 1.5f, currentRevealX, posY + size * 1.5f);
-            cvs.drawText(partialText, startX, yPos, mSignaturePaint);
-            cvs.restore();
+                // Smooth handwriting pen stroke curve
+                float smoothFrac = letterFrac * letterFrac * (3.0f - 2.0f * letterFrac);
+                penX = currentLetterStartX + (currentLetterWidth * smoothFrac);
 
-            // Glowing handwriting pen nib spark tip
-            if (a > 30) {
-                Paint tipPaint = new Paint();
-                tipPaint.setAntiAlias(true);
-                tipPaint.setColor(Color.WHITE);
-                tipPaint.setAlpha(Math.min(a, 255));
-                tipPaint.setShadowLayer(22.0f, 0.0f, 0.0f, Color.rgb(255, 215, 0));
+                // Natural handwriting micro-bounce along cursive loops
+                float strokeWave = (float) Math.sin(letterFrac * Math.PI * 2.0);
+                float strokeLift = (float) Math.cos(letterFrac * Math.PI);
+                penY = yPos + (strokeWave * size * 0.10f) - (strokeLift * size * 0.05f);
 
-                float penYOffset = (float)Math.sin(clampedProgress * totalLen * Math.PI * 2) * (size * 0.07f);
-                cvs.drawCircle(currentRevealX, yPos + penYOffset - 5f, 6.0f, tipPaint);
+                // Slanted clipping polygon for smooth cursive letter reveal without vertical edge chop
+                float slantOffset = size * 0.38f;
+                mClipPath.reset();
+                mClipPath.moveTo(startX - 60f, posY - size * 1.8f);
+                mClipPath.lineTo(penX + slantOffset, posY - size * 1.8f);
+                mClipPath.lineTo(penX - slantOffset, posY + size * 1.8f);
+                mClipPath.lineTo(startX - 60f, posY + size * 1.8f);
+                mClipPath.close();
 
-                tipPaint.setColor(Color.rgb(255, 215, 0));
-                tipPaint.setAlpha(Math.min(a, 180));
-                cvs.drawCircle(currentRevealX, yPos + penYOffset - 5f, 12.0f, tipPaint);
+                cvs.save();
+                cvs.clipPath(mClipPath);
+
+                mSignaturePaint.setShadowLayer(30.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+                cvs.drawText(txt.substring(0, activeChar + 1), startX, yPos, mSignaturePaint);
+                mSignaturePaint.clearShadowLayer();
+                cvs.drawText(txt.substring(0, activeChar + 1), startX, yPos, mSignaturePaint);
+
+                cvs.restore();
+            } else {
+                // Phase 2: All letters complete, pen sweeps the underline flourish swoosh
+                mSignaturePaint.setShadowLayer(30.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+                cvs.drawText(txt, startX, yPos, mSignaturePaint);
+                mSignaturePaint.clearShadowLayer();
+                cvs.drawText(txt, startX, yPos, mSignaturePaint);
+
+                float flourishProgress = (clampedProgress - textPhaseEnd) / (1.0f - textPhaseEnd);
+                float smoothFlourish = flourishProgress * flourishProgress * (3.0f - 2.0f * flourishProgress);
+
+                drawSignatureFlourish(cvs, a, r, g, b, swashStartX, swashTotalWidth, swashBaseY, swashDepth, size, smoothFlourish);
+
+                float t = smoothFlourish;
+                float p0Y = swashBaseY - (size * 0.04f);
+                float p1Y = swashBaseY + swashDepth;
+                float p2Y = swashBaseY - (size * 0.12f);
+                penX = swashStartX + (swashTotalWidth * smoothFlourish);
+                penY = (1f - t) * (1f - t) * p0Y + 2f * (1f - t) * t * p1Y + t * t * p2Y;
             }
+
+            // Draw glowing golden pen nib & sparkle ink trail
+            drawPenNibAndSparks(cvs, a, r, g, b, penX, penY, size, clampedProgress);
         }
+
         mSignaturePaint.clearShadowLayer();
         mSignaturePaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    private void drawSignatureFlourish(Canvas cvs, int a, int r, int g, int b, float startX, float totalWidth, float baseY, float depth, float size, float progress) {
+        if (progress <= 0f) return;
+
+        float strokeWidth = Math.max(3.5f, size * 0.022f);
+        mSwashPaint.setColor(Color.rgb(r, g, b));
+        mSwashPaint.setAlpha(Math.min(a, 235));
+        mSwashPaint.setStrokeWidth(strokeWidth);
+        mSwashPaint.setShadowLayer(24.0f, 0f, 0f, Color.argb(Math.min(a, 200), r, g, b));
+
+        mSwashPath.reset();
+        int steps = Math.max(6, (int) (progress * 40));
+        float p0X = startX;
+        float p0Y = baseY - (size * 0.04f);
+        float p1X = startX + (totalWidth * 0.48f);
+        float p1Y = baseY + depth;
+        float p2X = startX + totalWidth;
+        float p2Y = baseY - (size * 0.12f);
+
+        mSwashPath.moveTo(p0X, p0Y);
+        for (int i = 1; i <= steps; i++) {
+            float t = (float) i / 40.0f;
+            if (t > progress) t = progress;
+            float oneMinusT = 1.0f - t;
+            float px = oneMinusT * oneMinusT * p0X + 2.0f * oneMinusT * t * p1X + t * t * p2X;
+            float py = oneMinusT * oneMinusT * p0Y + 2.0f * oneMinusT * t * p1Y + t * t * p2Y;
+            mSwashPath.lineTo(px, py);
+        }
+
+        cvs.drawPath(mSwashPath, mSwashPaint);
+        mSwashPaint.clearShadowLayer();
+    }
+
+    private void drawPenNibAndSparks(Canvas cvs, int a, int r, int g, int b, float penX, float penY, float size, float progress) {
+        if (a <= 20) return;
+
+        // Outer soft golden/neon glow aura
+        mPenGlowPaint.setColor(Color.rgb(255, 215, 0));
+        mPenGlowPaint.setAlpha(Math.min(a, 160));
+        mPenGlowPaint.setShadowLayer(22.0f, 0f, 0f, Color.rgb(255, 215, 0));
+        cvs.drawCircle(penX, penY, size * 0.075f, mPenGlowPaint);
+        mPenGlowPaint.clearShadowLayer();
+
+        // Inner bright diamond white nib point
+        mPenTipPaint.setColor(Color.WHITE);
+        mPenTipPaint.setAlpha(Math.min(a, 255));
+        mPenTipPaint.setShadowLayer(14.0f, 0f, 0f, Color.WHITE);
+        cvs.drawCircle(penX, penY, size * 0.035f, mPenTipPaint);
+        mPenTipPaint.clearShadowLayer();
+
+        // Trailing luminous ink micro-sparks
+        mSparkPaint.setColor(Color.rgb(255, 235, 120));
+        for (int s = 1; s <= 3; s++) {
+            float sparkOffset = s * (size * 0.04f);
+            float sparkX = penX - sparkOffset;
+            float sparkY = penY + (float) Math.sin((progress * 24.0f) + s) * (size * 0.035f);
+            int sparkAlpha = (int) (Math.min(a, 190) * (1.0f - (s * 0.28f)));
+            if (sparkAlpha > 0) {
+                mSparkPaint.setAlpha(sparkAlpha);
+                cvs.drawCircle(sparkX, sparkY, size * 0.016f * (1.0f - (s * 0.2f)), mSparkPaint);
+            }
+        }
     }
 
     public void DrawLine(Canvas cvs, int a, int r, int g, int b, float lineWidth, float fromX, float fromY, float toX, float toY) {

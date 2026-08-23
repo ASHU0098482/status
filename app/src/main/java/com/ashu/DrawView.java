@@ -130,34 +130,52 @@ public class DrawView extends View implements Runnable {
         mSignaturePaint.setAlpha(a);
         mSignaturePaint.setTextSize(size);
         mSignaturePaint.setFakeBoldText(true);
-        mSignaturePaint.setShadowLayer(28.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+        mSignaturePaint.setTextAlign(Paint.Align.LEFT);
+        mSignaturePaint.setShadowLayer(30.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
 
         float yPos = posY - ((mSignaturePaint.descent() + mSignaturePaint.ascent()) / 2f);
         float totalWidth = mSignaturePaint.measureText(txt);
-        float leftX = posX - (totalWidth / 2f);
+        float startX = posX - (totalWidth / 2f);
+        int totalLen = txt.length();
 
         if (progress >= 1.0f) {
-            cvs.drawText(txt, posX, yPos, mSignaturePaint);
+            cvs.drawText(txt, startX, yPos, mSignaturePaint);
         } else {
-            float clampedProgress = Math.max(0f, Math.min(1.0f, progress));
-            float currentRevealX = leftX + (totalWidth * clampedProgress);
+            float clampedProgress = Math.max(0.001f, Math.min(0.999f, progress));
+            float charProgress = clampedProgress * totalLen;
+            int completedChars = (int) Math.floor(charProgress);
+            float currentLetterFraction = charProgress - completedChars;
+
+            int renderCharCount = Math.min(completedChars + 1, totalLen);
+            String partialText = txt.substring(0, renderCharCount);
+
+            float prevWidth = completedChars > 0 ? mSignaturePaint.measureText(txt.substring(0, completedChars)) : 0f;
+            float currentLetterWidth = mSignaturePaint.measureText(txt.substring(0, renderCharCount)) - prevWidth;
+            float currentRevealX = startX + prevWidth + (currentLetterWidth * currentLetterFraction);
 
             cvs.save();
-            cvs.clipRect(leftX - 30f, posY - size, currentRevealX, posY + size);
-            cvs.drawText(txt, posX, yPos, mSignaturePaint);
+            cvs.clipRect(startX - 50f, posY - size * 1.5f, currentRevealX, posY + size * 1.5f);
+            cvs.drawText(partialText, startX, yPos, mSignaturePaint);
             cvs.restore();
 
-            // Glowing pen nib / ink particle at current write point
+            // Glowing handwriting pen nib spark tip
             if (a > 30) {
                 Paint tipPaint = new Paint();
                 tipPaint.setAntiAlias(true);
                 tipPaint.setColor(Color.WHITE);
-                tipPaint.setAlpha(Math.min(a, 240));
-                tipPaint.setShadowLayer(18.0f, 0.0f, 0.0f, Color.rgb(255, 215, 0));
-                cvs.drawCircle(currentRevealX, yPos - 5f, 4.5f, tipPaint);
+                tipPaint.setAlpha(Math.min(a, 255));
+                tipPaint.setShadowLayer(22.0f, 0.0f, 0.0f, Color.rgb(255, 215, 0));
+
+                float penYOffset = (float)Math.sin(clampedProgress * totalLen * Math.PI * 2) * (size * 0.07f);
+                cvs.drawCircle(currentRevealX, yPos + penYOffset - 5f, 6.0f, tipPaint);
+
+                tipPaint.setColor(Color.rgb(255, 215, 0));
+                tipPaint.setAlpha(Math.min(a, 180));
+                cvs.drawCircle(currentRevealX, yPos + penYOffset - 5f, 12.0f, tipPaint);
             }
         }
         mSignaturePaint.clearShadowLayer();
+        mSignaturePaint.setTextAlign(Paint.Align.CENTER);
     }
 
     public void DrawLine(Canvas cvs, int a, int r, int g, int b, float lineWidth, float fromX, float fromY, float toX, float toY) {

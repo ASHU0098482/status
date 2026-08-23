@@ -68,7 +68,17 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                if (RemoteConfig.remoteVersionCode > localVersion) {
+                // Loop prevention: Avoid re-downloading if already attempted within 60s
+                long lastAttemptTime = getSharedPreferences("ASHUPrefs", MODE_PRIVATE).getLong("last_update_attempt_time", 0);
+                int lastAttemptVer = getSharedPreferences("ASHUPrefs", MODE_PRIVATE).getInt("last_update_attempt_ver", 0);
+                boolean recentlyAttempted = (lastAttemptVer == RemoteConfig.remoteVersionCode) 
+                        && (System.currentTimeMillis() - lastAttemptTime < 60000);
+
+                if (RemoteConfig.remoteVersionCode > localVersion && !recentlyAttempted) {
+                    getSharedPreferences("ASHUPrefs", MODE_PRIVATE).edit()
+                            .putInt("last_update_attempt_ver", RemoteConfig.remoteVersionCode)
+                            .putLong("last_update_attempt_time", System.currentTimeMillis())
+                            .apply();
                     downloadAndInstallApk(RemoteConfig.updateUrl);
                     return;
                 }
@@ -172,9 +182,9 @@ public class MainActivity extends Activity {
 
                 String currentUrl = downloadUrl;
                 if (currentUrl.contains("?")) {
-                    currentUrl += "&t=" + System.currentTimeMillis();
+                    currentUrl += "&t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000);
                 } else {
-                    currentUrl += "?t=" + System.currentTimeMillis();
+                    currentUrl += "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000);
                 }
 
                 java.net.HttpURLConnection conn = null;
@@ -182,11 +192,15 @@ public class MainActivity extends Activity {
                 while (redirects < 10) {
                     java.net.URL url = new java.net.URL(currentUrl);
                     conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setUseCaches(false);
+                    conn.setDefaultUseCaches(false);
                     conn.setInstanceFollowRedirects(true);
                     conn.setRequestMethod("GET");
                     conn.setConnectTimeout(15000);
                     conn.setReadTimeout(15000);
                     conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
+                    conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+                    conn.setRequestProperty("Pragma", "no-cache");
                     conn.setRequestProperty("Accept", "*/*");
 
                     int status = conn.getResponseCode();
@@ -244,7 +258,24 @@ public class MainActivity extends Activity {
     private void installApk(final java.io.File apkFile) {
         if (apkFile == null || !apkFile.exists()) {
             Toast.makeText(this, "Update file not found.", Toast.LENGTH_SHORT).show();
+            showFirstSplash();
             return;
+        }
+
+        // Loop prevention check: Verify if downloaded APK is actually newer than current installed version
+        int localVersion = 1;
+        try {
+            localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            android.content.pm.PackageInfo downloadedPkgInfo = getPackageManager()
+                    .getPackageArchiveInfo(apkFile.getAbsolutePath(), 0);
+            if (downloadedPkgInfo != null && downloadedPkgInfo.versionCode <= localVersion) {
+                // Downloaded APK is not newer (e.g. stale CDN cache). Break loop immediately!
+                Toast.makeText(this, "App is already up to date.", Toast.LENGTH_SHORT).show();
+                showFirstSplash();
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // 1. Try silent root install if root is available
@@ -315,8 +346,10 @@ public class MainActivity extends Activity {
             }
 
             startActivity(intent);
+            finish();
         } catch (Exception e) {
             Toast.makeText(this, "Install failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            showFirstSplash();
         }
     }
 

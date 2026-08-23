@@ -545,27 +545,34 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // --- Signature Key Intro Animation on Horizontal Screen ---
+        // --- Signature Key Writing Animation on Horizontal Screen ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
             Vector2 centerPos(draw.getWidth() / 2.0f, draw.getHeight() / 2.0f);
-            float signatureSize = 140.0f;
-
-            if (elapsed < 1200) {
-                // Phase 1: Full black screen, signature text fades in at center
-                draw.DrawBlackScreen(255);
-                float alpha = (float)elapsed / 1200.0f;
-                if (alpha > 1.0f) alpha = 1.0f;
-                draw.DrawSignatureText(Color(255, 255, 255, (int)(alpha * 255)), userLicenseKey.c_str(), centerPos, signatureSize);
+            float signatureSize = 200.0f;
+            if (draw.getWidth() >= 1920 || draw.getHeight() >= 1920) {
+                signatureSize = 230.0f;
             }
-            else if (elapsed < 2600) {
-                // Phase 2: Full black screen, signature key in center with bright white glow
+
+            int totalLen = (int)userLicenseKey.length();
+            int typingDuration = 1500;
+            int charDelay = std::max(70, typingDuration / (totalLen > 0 ? totalLen : 1));
+
+            if (elapsed < typingDuration) {
+                // Phase 1: Letter-by-letter writing animation (A D M I N style cursive reveal)
+                draw.DrawBlackScreen(255);
+                int charsToShow = std::min((int)(elapsed / charDelay) + 1, totalLen);
+                std::string subText = userLicenseKey.substr(0, charsToShow);
+                draw.DrawSignatureText(Color(255, 255, 255, 255), subText.c_str(), centerPos, signatureSize);
+            }
+            else if (elapsed < 3000) {
+                // Phase 2: Complete signature text glowing brightly at center
                 draw.DrawBlackScreen(255);
                 draw.DrawSignatureText(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize);
             }
-            else if (elapsed < 4000) {
-                // Phase 3: Black screen fades to transparent along with signature text
-                float progress = (elapsed - 2600) / 1400.0f; // 0.0 to 1.0
+            else if (elapsed < 4400) {
+                // Phase 3: Black screen and signature text smoothly fade out into game
+                float progress = (elapsed - 3000) / 1400.0f; // 0.0 to 1.0
                 if (progress > 1.0f) progress = 1.0f;
 
                 int screenAlpha = (int)(255 * (1.0f - progress));
@@ -582,7 +589,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
 
         // Show Logo overlay at top center when Activate All is ON and animation is not running
         if (pAimbotPlayer.enableAimbot && !showAnimation) {
-            draw.DrawLogo(draw.getWidth() / 2.0f, 60.0f, 75.0f, 75.0f, 255.0f);
+            draw.DrawLogo(draw.getWidth() / 2.0f, 75.0f, 110.0f, 110.0f, 255.0f);
         }
 
         if (pAimbotPlayer.enableAimbot) {
@@ -617,7 +624,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     Vector2 lineEnd;
 
                     if (pEspPlayer.lineType == 0) {
-                        lineStart = Vector2(draw.getWidth() / 2, 95.0f);
+                        lineStart = Vector2(draw.getWidth() / 2, 130.0f);
                         lineEnd = Vector2(HeadLoc.X, draw.getHeight() - HeadLoc.Y);
                     } else if (pEspPlayer.lineType == 1) {
                         lineStart = Vector2(draw.getWidth() / 2, draw.getHeight() / 2);
@@ -751,7 +758,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     Vector2 lineEnd(headX, headY);
 
                     if (pEspPlayer.lineType == 0) {
-                        lineStart = Vector2(draw.getWidth() / 2, 95.0f);
+                        lineStart = Vector2(draw.getWidth() / 2, 130.0f);
                     } else if (pEspPlayer.lineType == 1) {
                         lineStart = Vector2(draw.getWidth() / 2, draw.getHeight() / 2);
                     } else {

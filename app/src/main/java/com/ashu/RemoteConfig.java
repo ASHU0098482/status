@@ -26,7 +26,7 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 51;
+    public static int remoteVersionCode = 52;
     public static String updateUrl = "";
 
     public static boolean showWebsiteBanner = false;
@@ -42,11 +42,10 @@ public class RemoteConfig {
             BufferedReader reader = null;
             boolean success = false;
             
-            // Try direct GitHub raw with timestamp + jsdelivr CDN for instant updates
+            // Query raw github with dynamic timestamp and random tokens to completely bypass caching
             String[] urlsToTry = new String[] {
-                CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000),
-                CONFIG_URL + "?nocache=" + System.currentTimeMillis(),
-                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis(),
+                CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
+                CONFIG_URL + "?v=" + System.currentTimeMillis() + "&b=" + (int)(Math.random() * 1000000),
                 CONFIG_URL
             };
 

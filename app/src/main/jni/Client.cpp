@@ -496,8 +496,21 @@ JNIEXPORT void JNICALL
 Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobject canvas) {
     DrawView draw = DrawView(env, draw_view, canvas);
 
-
-
+    std::string userLicenseKey = "admin";
+    jclass menuClass = env->FindClass("com/ashu/Menu");
+    if (menuClass != nullptr) {
+        jfieldID keyField = env->GetStaticFieldID(menuClass, "userLicenseKey", "Ljava/lang/String;");
+        if (keyField != nullptr) {
+            jstring jKeyStr = (jstring) env->GetStaticObjectField(menuClass, keyField);
+            if (jKeyStr != nullptr) {
+                const char *keyChars = env->GetStringUTFChars(jKeyStr, nullptr);
+                if (keyChars != nullptr) {
+                    userLicenseKey = std::string(keyChars);
+                    env->ReleaseStringUTFChars(jKeyStr, keyChars);
+                }
+            }
+        }
+    }
 
     if (draw.isValid()) {
         // Real-time FPS Calculation and Drawing in Bottom-Left Corner
@@ -526,43 +539,32 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // --- Premium Intro Animation ---
+        // --- Signature Key Intro Animation on Horizontal Screen ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
 
             if (elapsed < 1200) {
-                // Phase 1: Full black screen, center displays the skull logo
+                // Phase 1: Full black screen, signature text fades in at center
                 draw.DrawBlackScreen(255);
-                draw.DrawLogo(draw.getWidth() / 2, draw.getHeight() / 2, 180.0f, 180.0f, 255.0f);
+                float alpha = (float)elapsed / 1200.0f;
+                if (alpha > 1.0f) alpha = 1.0f;
+                draw.DrawSignatureText(Color(255, 255, 255, (int)(alpha * 255)), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
             }
-            else if (elapsed < 2400) {
-                // Phase 2: Full black screen, logo disappears, bold golden text "JACK PANEL" at center
+            else if (elapsed < 2600) {
+                // Phase 2: Full black screen, signature key in center with bright white glow
                 draw.DrawBlackScreen(255);
-                // Center bold text (size 70.0f)
-                draw.DrawText(Color(0, 0, 0, 200), "JACK PANEL", Vector2(draw.getWidth() / 2 + 2, draw.getHeight() / 2 + 2), 70.0f);
-                draw.DrawText(Color(255, 184, 0, 255), "JACK PANEL", Vector2(draw.getWidth() / 2, draw.getHeight() / 2), 70.0f);
+                draw.DrawSignatureText(Color(255, 255, 255, 255), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
             }
-            else if (elapsed < 3800) {
-                // Phase 3: Black screen fades to transparent, and "JACK PANEL" text slides from center to final top position
-                float progress = (elapsed - 2400) / 1400.0f; // 0.0 to 1.0
+            else if (elapsed < 4000) {
+                // Phase 3: Black screen fades to transparent along with signature text
+                float progress = (elapsed - 2600) / 1400.0f; // 0.0 to 1.0
                 if (progress > 1.0f) progress = 1.0f;
 
                 int screenAlpha = (int)(255 * (1.0f - progress));
                 draw.DrawBlackScreen(screenAlpha);
 
-                // Smoothly interpolate Y position from center to top (Y = 120)
-                float startY = draw.getHeight() / 2.0f;
-                float endY = 120.0f;
-                float currentY = startY + (endY - startY) * progress;
-
-                // Smoothly interpolate size from 70 to 45
-                float currentSize = 70.0f + (45.0f - 70.0f) * progress;
-
-                // Color interpolates to Golden
-                Color currentColor = Color(255, 184, 0, 255);
-
-                draw.DrawText(Color(0, 0, 0, 200), "JACK PANEL", Vector2(draw.getWidth() / 2 + 2, currentY + 2), currentSize);
-                draw.DrawText(currentColor, "JACK PANEL", Vector2(draw.getWidth() / 2, currentY), currentSize);
+                int textAlpha = (int)(255 * (1.0f - progress));
+                draw.DrawSignatureText(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
             }
             else {
                 // Animation finished!
@@ -570,11 +572,9 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             }
         }
 
-        // Show "JACK PANEL" overlay when Activate All is ON and animation is not running
+        // Show Logo overlay at top center when Activate All is ON and animation is not running
         if (pAimbotPlayer.enableAimbot && !showAnimation) {
-            Vector2 welcomePos(draw.getWidth() / 2, 120);
-            draw.DrawText(Color(0, 0, 0, 200), "JACK PANEL", Vector2(welcomePos.X + 2, welcomePos.Y + 2), 45.0f);
-            draw.DrawText(Color(255, 184, 0, 255), "JACK PANEL", welcomePos, 45.0f);
+            draw.DrawLogo(draw.getWidth() / 2.0f, 60.0f, 75.0f, 75.0f, 255.0f);
         }
 
         if (pAimbotPlayer.enableAimbot) {
@@ -609,7 +609,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     Vector2 lineEnd;
 
                     if (pEspPlayer.lineType == 0) {
-                        lineStart = Vector2(draw.getWidth() / 2, 0);
+                        lineStart = Vector2(draw.getWidth() / 2, 95.0f);
                         lineEnd = Vector2(HeadLoc.X, draw.getHeight() - HeadLoc.Y);
                     } else if (pEspPlayer.lineType == 1) {
                         lineStart = Vector2(draw.getWidth() / 2, draw.getHeight() / 2);
@@ -743,7 +743,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                     Vector2 lineEnd(headX, headY);
 
                     if (pEspPlayer.lineType == 0) {
-                        lineStart = Vector2(draw.getWidth() / 2, 0);
+                        lineStart = Vector2(draw.getWidth() / 2, 95.0f);
                     } else if (pEspPlayer.lineType == 1) {
                         lineStart = Vector2(draw.getWidth() / 2, draw.getHeight() / 2);
                     } else {

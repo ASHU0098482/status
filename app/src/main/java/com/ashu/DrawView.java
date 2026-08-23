@@ -18,6 +18,8 @@ public class DrawView extends View implements Runnable {
     Paint mBitMapPaint;
     Paint mRectPaint1;
     Paint mRectPaint2;
+    Paint mSignaturePaint;
+    Typeface mSignatureTypeface;
 
     Thread mThread;
     int FPS = 240;
@@ -93,6 +95,16 @@ public class DrawView extends View implements Runnable {
 
         mBitMapPaint = new Paint();
         mBitMapPaint.setAntiAlias(true);
+
+        mSignaturePaint = new Paint();
+        mSignaturePaint.setAntiAlias(true);
+        mSignaturePaint.setTextAlign(Paint.Align.CENTER);
+        try {
+            mSignatureTypeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/signature.ttf");
+            mSignaturePaint.setTypeface(mSignatureTypeface);
+        } catch (Exception e) {
+            mSignaturePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.ITALIC));
+        }
     }
 
     public void ClearCanvas(Canvas cvs) {
@@ -106,6 +118,16 @@ public class DrawView extends View implements Runnable {
             android.graphics.RectF dst = new android.graphics.RectF(posX - width / 2, posY - height / 2, posX + width / 2, posY + height / 2);
             cvs.drawBitmap(Menu.logoBitmap, null, dst, p);
         }
+    }
+
+    public void DrawSignatureText(Canvas cvs, int a, int r, int g, int b, String txt, float posX, float posY, float size) {
+        if (txt == null || txt.isEmpty()) return;
+        mSignaturePaint.setColor(Color.rgb(r, g, b));
+        mSignaturePaint.setAlpha(a);
+        mSignaturePaint.setTextSize(size);
+        mSignaturePaint.setShadowLayer(14.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 160), r, g, b));
+        cvs.drawText(txt, posX, posY, mSignaturePaint);
+        mSignaturePaint.clearShadowLayer();
     }
 
     public void DrawLine(Canvas cvs, int a, int r, int g, int b, float lineWidth, float fromX, float fromY, float toX, float toY) {

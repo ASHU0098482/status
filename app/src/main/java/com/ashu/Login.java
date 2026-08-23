@@ -319,20 +319,24 @@ public class Login {
         loginButton.setLayoutParams(btnParams);
         card.addView(loginButton);
 
-        // Update APK Button
-        Button updateBtn = new Button(context);
-        updateBtn.setText("🔄 UPDATE NOW");
-        updateBtn.setTextColor(Color.parseColor("#FFB800"));
-        updateBtn.setTextSize(11.5f);
-        updateBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        updateBtn.setBackgroundColor(Color.TRANSPARENT);
-        updateBtn.setPadding(0, new Utils(context).FixDP(2), 0, new Utils(context).FixDP(2));
-        updateBtn.setOnClickListener(v -> {
-            if (context instanceof MainActivity) {
-                ((MainActivity) context).checkForUpdates(true);
+        // Visit Website Button
+        Button visitWebsiteBtn = new Button(context);
+        visitWebsiteBtn.setText("🌐 VISIT WEBSITE");
+        visitWebsiteBtn.setTextColor(Color.parseColor("#FFB800"));
+        visitWebsiteBtn.setTextSize(12f);
+        visitWebsiteBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        visitWebsiteBtn.setBackgroundColor(Color.TRANSPARENT);
+        visitWebsiteBtn.setPadding(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(4));
+        visitWebsiteBtn.setOnClickListener(v -> {
+            try {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(browserIntent);
+            } catch (Exception e) {
+                showToast("Cannot open browser: " + e.getMessage());
             }
         });
-        card.addView(updateBtn);
+        card.addView(visitWebsiteBtn);
 
         // Loading indicator
         LinearLayout loadingLayout = new LinearLayout(context);
@@ -716,6 +720,7 @@ public class Login {
                     sendOwnerIDToNative(RemoteConfig.keyauthOwnerId);
                     context.getSharedPreferences("ASHUPrefs", Context.MODE_PRIVATE)
                             .edit().putString("saved_license", licenseKey).apply();
+                    Menu.userLicenseKey = licenseKey;
 
                     new Handler(Looper.getMainLooper()).post(() -> {
                         setStatus("Welcome " + licenseKey + " 👑", Color.WHITE, false);

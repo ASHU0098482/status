@@ -49,6 +49,7 @@ public class Menu {
     private int injectType;
 
     // Variables Menu
+    public static String userLicenseKey = "admin";
     private int buttonClick = 0;
     public static int PrimaryColor = 0xFFFFB800; // Golden accent
     public static int TabSelectedColor = 0xFFFFB800; // Golden accent for selected tabs
@@ -106,6 +107,13 @@ public class Menu {
         context = globContext;
         utils = new Utils(context);
         injectType = glob_injectType;
+        if (context != null) {
+            String saved = context.getSharedPreferences("ASHUPrefs", Context.MODE_PRIVATE)
+                    .getString("saved_license", "");
+            if (saved != null && !saved.trim().isEmpty()) {
+                userLicenseKey = saved.trim();
+            }
+        }
         System.loadLibrary("hawdawdawdawda");
         onCreate();
     }

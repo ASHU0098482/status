@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
                 }
 
                 if (RemoteConfig.remoteVersionCode > localVersion) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
+                    downloadAndInstallApk(RemoteConfig.updateUrl);
                     return;
                 }
 
@@ -121,29 +121,21 @@ public class MainActivity extends Activity {
                 }
 
                 if (RemoteConfig.remoteVersionCode > localVersion) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
+                    downloadAndInstallApk(RemoteConfig.updateUrl);
                 } else if (showToastIfUpToDate) {
-                    // When user manually clicks "UPDATE APK", always show dialog allowing download of latest build
-                    showUpdateDialog(RemoteConfig.updateUrl);
+                    Toast.makeText(MainActivity.this, "App is up to date!", Toast.LENGTH_SHORT).show();
                 }
             });
         });
     }
 
-    public void showUpdateDialog(final String updateUrl) {
-        final String validUpdateUrl = (updateUrl != null && !updateUrl.isEmpty())
-            ? updateUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/VIP_PANEL.apk";
-        String msg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) 
-            ? RemoteConfig.noticeMessage + "\n\nTap 'UPDATE NOW' to download and install."
-            : "A new update is available. Tap 'UPDATE NOW' to download and install automatically.";
-        String title = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
-            ? RemoteConfig.noticeTitle : "🔄 Update Available!";
+    public void showUpdateFailedDialog(final String apkUrl) {
         new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle(title)
-            .setMessage(msg)
+            .setTitle("❌ Update Failed")
+            .setMessage("Failed to download the update. Please check your internet connection.")
             .setCancelable(false)
-            .setPositiveButton("UPDATE NOW", (d, which) -> {
-                downloadAndInstallApk(validUpdateUrl);
+            .setPositiveButton("RETRY", (d, which) -> {
+                downloadAndInstallApk(apkUrl);
             })
             .setNegativeButton("EXIT", (d, which) -> {
                 finishAffinity();
@@ -156,11 +148,19 @@ public class MainActivity extends Activity {
         final String downloadUrl = (apkUrl != null && !apkUrl.isEmpty())
             ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/VIP_PANEL.apk";
         android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
-        progressDialog.setTitle("Downloading Update...");
-        progressDialog.setMessage("Please wait while downloading the latest APK update.");
+        String dialogTitle = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
+            ? RemoteConfig.noticeTitle : "🔄 Auto Updating APK...";
+        String dialogMsg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty())
+            ? RemoteConfig.noticeMessage
+            : "Downloading the latest version automatically. Please wait...";
+        progressDialog.setTitle(dialogTitle);
+        progressDialog.setMessage(dialogMsg);
         progressDialog.setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL);
         progressDialog.setCancelable(false);
         progressDialog.setIndeterminate(false);
+        progressDialog.setButton(android.content.DialogInterface.BUTTON_NEGATIVE, "EXIT", (d, which) -> {
+            finishAffinity();
+        });
         progressDialog.show();
 
         new Thread(() -> {
@@ -235,7 +235,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     Toast.makeText(MainActivity.this, "Update failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    showUpdateDialog(apkUrl); // Show dialog again if download fails
+                    showUpdateFailedDialog(apkUrl); // Show retry dialog if download fails
                 });
             }
         }).start();

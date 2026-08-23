@@ -33,7 +33,9 @@ public class Login {
     private boolean isSettingsVisible = false;
 
     private LinearLayout rootContainer, card;
+    private LinearLayout inputContainer;
     private EditText inputLicense;
+    private Button pasteButton;
     private Button loginButton;
     private TextView title, subtitle;
     private LinearLayout settingsLayout;
@@ -200,33 +202,104 @@ public class Login {
         settingsLayout.addView(suRow);
         card.addView(settingsLayout);
 
-        // License input
+        // License input container with Paste button
+        inputContainer = new LinearLayout(context);
+        inputContainer.setOrientation(LinearLayout.HORIZONTAL);
+        inputContainer.setGravity(Gravity.CENTER_VERTICAL);
+        
+        GradientDrawable inputContainerBg = new GradientDrawable();
+        inputContainerBg.setColor(Color.parseColor("#262626"));
+        inputContainerBg.setCornerRadius(new Utils(context).FixDP(12));
+        inputContainerBg.setStroke(new Utils(context).FixDP(1), Color.parseColor("#3a3a3a"));
+        inputContainer.setBackground(inputContainerBg);
+
+        LinearLayout.LayoutParams inputContainerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        inputContainerParams.setMargins(0, new Utils(context).FixDP(6), 0, new Utils(context).FixDP(10));
+        inputContainer.setLayoutParams(inputContainerParams);
+        inputContainer.setPadding(
+                new Utils(context).FixDP(12),
+                new Utils(context).FixDP(4),
+                new Utils(context).FixDP(6),
+                new Utils(context).FixDP(4)
+        );
+
+        // License EditText
         inputLicense = new EditText(context);
         inputLicense.setHint("ENTER LICENSE KEY");
-        inputLicense.setTextSize(15);
+        inputLicense.setTextSize(14);
         inputLicense.setTextColor(Color.WHITE);
-        inputLicense.setHintTextColor(Color.GRAY);
-        inputLicense.setGravity(Gravity.CENTER);
-        inputLicense.setPadding(
-                new Utils(context).FixDP(14),
-                new Utils(context).FixDP(11),
-                new Utils(context).FixDP(14),
-                new Utils(context).FixDP(11)
+        inputLicense.setHintTextColor(Color.parseColor("#777777"));
+        inputLicense.setSingleLine(true);
+        inputLicense.setBackground(null);
+        inputLicense.setPadding(0, new Utils(context).FixDP(8), new Utils(context).FixDP(6), new Utils(context).FixDP(8));
+        
+        LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f
         );
-        GradientDrawable inputBg = new GradientDrawable();
-        inputBg.setCornerRadius(new Utils(context).FixDP(10));
-        inputBg.setColor(Color.parseColor("#2c2c2c"));
-        inputLicense.setBackground(inputBg);
-        card.addView(inputLicense);
+        etParams.gravity = Gravity.CENTER_VERTICAL;
+        inputLicense.setLayoutParams(etParams);
 
         inputLicense.setText(context.getSharedPreferences("ASHUPrefs", Context.MODE_PRIVATE)
                 .getString("saved_license", ""));
 
-        // Login button
+        // Paste Button
+        pasteButton = new Button(context);
+        pasteButton.setText("📋 PASTE");
+        pasteButton.setTextColor(Color.BLACK);
+        pasteButton.setTextSize(11);
+        pasteButton.setTypeface(Typeface.DEFAULT_BOLD);
+        pasteButton.setPadding(
+                new Utils(context).FixDP(10),
+                new Utils(context).FixDP(6),
+                new Utils(context).FixDP(10),
+                new Utils(context).FixDP(6)
+        );
+        GradientDrawable pasteBg = new GradientDrawable();
+        pasteBg.setColor(Color.parseColor("#FFB800")); // Golden Amber
+        pasteBg.setCornerRadius(new Utils(context).FixDP(8));
+        pasteButton.setBackground(pasteBg);
+
+        LinearLayout.LayoutParams pasteParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                new Utils(context).FixDP(36)
+        );
+        pasteParams.gravity = Gravity.CENTER_VERTICAL;
+        pasteButton.setLayoutParams(pasteParams);
+
+        pasteButton.setOnClickListener(v -> {
+            try {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard != null && clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
+                    CharSequence pasteData = clipboard.getPrimaryClip().getItemAt(0).getText();
+                    if (pasteData != null && pasteData.length() > 0) {
+                        String cleanKey = pasteData.toString().trim();
+                        inputLicense.setText(cleanKey);
+                        inputLicense.setSelection(cleanKey.length());
+                        showToast("Key Pasted! 📋");
+                    } else {
+                        showToast("Clipboard is empty!");
+                    }
+                } else {
+                    showToast("Clipboard is empty!");
+                }
+            } catch (Exception e) {
+                showToast("Failed to paste: " + e.getMessage());
+            }
+        });
+
+        inputContainer.addView(inputLicense);
+        inputContainer.addView(pasteButton);
+        card.addView(inputContainer);
+
+        // Login button - Centered & styled
         loginButton = new Button(context);
         loginButton.setText("LOGIN");
         loginButton.setTextColor(Color.WHITE);
         loginButton.setTextSize(15);
+        loginButton.setTypeface(Typeface.DEFAULT_BOLD);
         loginButton.setPadding(
                 new Utils(context).FixDP(12),
                 new Utils(context).FixDP(12),
@@ -234,13 +307,15 @@ public class Login {
                 new Utils(context).FixDP(12)
         );
         GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor("#F59E0B")); // Golden Button
+        btnBg.setColor(Color.parseColor("#F59E0B")); // Golden Amber
         btnBg.setCornerRadius(new Utils(context).FixDP(50));
         loginButton.setBackground(btnBg);
+        loginButton.setGravity(Gravity.CENTER);
 
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        btnParams.setMargins(0, new Utils(context).FixDP(12), 0, new Utils(context).FixDP(4));
+        btnParams.gravity = Gravity.CENTER_HORIZONTAL;
+        btnParams.setMargins(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(4));
         loginButton.setLayoutParams(btnParams);
         card.addView(loginButton);
 
@@ -363,7 +438,7 @@ public class Login {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         cardParams.gravity = Gravity.CENTER_HORIZONTAL;
-        cardParams.setMargins(0, new Utils(context).FixDP(12), 0, new Utils(context).FixDP(16));
+        cardParams.setMargins(0, new Utils(context).FixDP(32), 0, new Utils(context).FixDP(24));
         disclaimerCard.setLayoutParams(cardParams);
 
         // --- 1. Header: 🛡️ DISCLAIMERS ---
@@ -632,6 +707,7 @@ public class Login {
                         new Menu(context, 1);
                         isSettingsVisible = true;
                         settingsLayout.setVisibility(View.VISIBLE);
+                        if (inputContainer != null) inputContainer.setVisibility(View.GONE);
                         inputLicense.setVisibility(View.GONE);
                         loginButton.setVisibility(View.GONE);
 

@@ -813,30 +813,29 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 // 1. Draw card background (semi-transparent dark)
                 draw.DrawFilledRectinfo(Color(20, 20, 20, (int)(alpha * 0.92f)), Rect(toastX, toastY, toastWidth, toastHeight));
 
-                // 2. Draw card outline box (thin red border for gaming aesthetic)
-                Color outlineColor = Color(204, 0, 0, alpha);
+                // 2. Draw card outline box (Gold VIP theme border)
+                Color outlineColor = Color(255, 184, 0, alpha);
                 draw.DrawBox(outlineColor, 1.5f, Rect(toastX, toastY, toastWidth, toastHeight));
 
                 // 3. Draw thick left accent stripe
                 draw.DrawFilledRectinfo(outlineColor, Rect(toastX, toastY, 6.0f, toastHeight));
 
-                // 4. Draw Bell Emoji 🔔 on the left
-                draw.DrawText(Color(255, 255, 255, alpha), "🔔", Vector2(toastX + 35.0f, toastY + 53.0f), 28.0f);
+                // 4. Draw Bell / Star Emoji on the left
+                draw.DrawText(Color(255, 255, 255, alpha), "⚡", Vector2(toastX + 35.0f, toastY + 53.0f), 28.0f);
 
-                // 5. Draw Title: "SYSTEM ALERT" in bold red (left-aligned)
-                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), "SYSTEM ALERT", Vector2(toastX + 70.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
-                draw.DrawTextLeft(outlineColor, "SYSTEM ALERT", Vector2(toastX + 70.0f, toastY + 28.0f), 12.0f);
+                // 5. Draw Title: "JACK PANEL" in bold gold (left-aligned)
+                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), "JACK PANEL", Vector2(toastX + 70.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
+                draw.DrawTextLeft(outlineColor, "JACK PANEL", Vector2(toastX + 70.0f, toastY + 28.0f), 12.0f);
 
-                // 6. Draw Status Message: "[Feature] Enabled/Disabled" (left-aligned)
+                // 6. Draw Status Message: "[Feature] : ACTIVE" (left-aligned)
                 char statusText[96];
                 if (currentNotification.enabled) {
-                    sprintf(statusText, "%s Enabled", currentNotification.name);
+                    sprintf(statusText, "%s : ACTIVE 🟢", currentNotification.name);
                 } else {
-                    sprintf(statusText, "%s Disabled", currentNotification.name);
+                    sprintf(statusText, "%s : OFF ⚪", currentNotification.name);
                 }
 
-                Color textColor = currentNotification.enabled ? Color::Green() : Color::Red();
-                textColor.a = alpha;
+                Color textColor = currentNotification.enabled ? Color(0, 230, 118, alpha) : Color(180, 180, 180, alpha);
 
                 draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), statusText, Vector2(toastX + 70.0f + 1.0f, toastY + 58.0f + 1.0f), 18.0f);
                 draw.DrawTextLeft(textColor, statusText, Vector2(toastX + 70.0f, toastY + 58.0f), 18.0f);

@@ -355,10 +355,10 @@ public class Login {
 
         LinearLayout scrollContent = new LinearLayout(context);
         scrollContent.setOrientation(LinearLayout.VERTICAL);
-        scrollContent.setGravity(Gravity.CENTER); // Perfectly centers horizontally & vertically
+        scrollContent.setGravity(Gravity.CENTER_HORIZONTAL);
         scrollContent.setPadding(
                 new Utils(context).FixDP(16),
-                new Utils(context).FixDP(20),
+                new Utils(context).FixDP(30),
                 new Utils(context).FixDP(16),
                 new Utils(context).FixDP(20)
         );
@@ -368,6 +368,7 @@ public class Login {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         cardLayoutParam.gravity = Gravity.CENTER_HORIZONTAL;
+        cardLayoutParam.setMargins(0, new Utils(context).FixDP(22), 0, 0);
         card.setLayoutParams(cardLayoutParam);
 
         scrollContent.addView(card);
@@ -438,7 +439,7 @@ public class Login {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         cardParams.gravity = Gravity.CENTER_HORIZONTAL;
-        cardParams.setMargins(0, new Utils(context).FixDP(32), 0, new Utils(context).FixDP(24));
+        cardParams.setMargins(0, new Utils(context).FixDP(60), 0, new Utils(context).FixDP(24));
         disclaimerCard.setLayoutParams(cardParams);
 
         // --- 1. Header: 🛡️ DISCLAIMERS ---

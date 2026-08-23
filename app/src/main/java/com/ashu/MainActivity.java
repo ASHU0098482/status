@@ -68,17 +68,7 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                // Loop prevention: Avoid re-downloading if already attempted within 60s
-                long lastAttemptTime = getSharedPreferences("ASHUPrefs", MODE_PRIVATE).getLong("last_update_attempt_time", 0);
-                int lastAttemptVer = getSharedPreferences("ASHUPrefs", MODE_PRIVATE).getInt("last_update_attempt_ver", 0);
-                boolean recentlyAttempted = (lastAttemptVer == RemoteConfig.remoteVersionCode) 
-                        && (System.currentTimeMillis() - lastAttemptTime < 60000);
-
-                if (RemoteConfig.remoteVersionCode > localVersion && !recentlyAttempted) {
-                    getSharedPreferences("ASHUPrefs", MODE_PRIVATE).edit()
-                            .putInt("last_update_attempt_ver", RemoteConfig.remoteVersionCode)
-                            .putLong("last_update_attempt_time", System.currentTimeMillis())
-                            .apply();
+                if (RemoteConfig.remoteVersionCode > localVersion) {
                     downloadAndInstallApk(RemoteConfig.updateUrl);
                     return;
                 }

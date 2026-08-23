@@ -42,12 +42,12 @@ public class RemoteConfig {
             BufferedReader reader = null;
             boolean success = false;
             
-            // Try jsdelivr CDN first for instant updates + direct GitHub raw with timestamp
+            // Try direct GitHub raw with timestamp + jsdelivr CDN for instant updates
             String[] urlsToTry = new String[] {
-                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis(),
-                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json",
                 CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000),
-                CONFIG_URL + "?nocache=" + System.currentTimeMillis()
+                CONFIG_URL + "?nocache=" + System.currentTimeMillis(),
+                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis(),
+                CONFIG_URL
             };
 
             for (String currentUrlStr : urlsToTry) {

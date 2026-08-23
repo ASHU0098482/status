@@ -125,8 +125,10 @@ public class DrawView extends View implements Runnable {
         mSignaturePaint.setColor(Color.rgb(r, g, b));
         mSignaturePaint.setAlpha(a);
         mSignaturePaint.setTextSize(size);
-        mSignaturePaint.setShadowLayer(14.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 160), r, g, b));
-        cvs.drawText(txt, posX, posY, mSignaturePaint);
+        mSignaturePaint.setFakeBoldText(true);
+        mSignaturePaint.setShadowLayer(25.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+        float yPos = posY - ((mSignaturePaint.descent() + mSignaturePaint.ascent()) / 2f);
+        cvs.drawText(txt, posX, yPos, mSignaturePaint);
         mSignaturePaint.clearShadowLayer();
     }
 

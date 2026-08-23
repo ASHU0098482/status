@@ -723,8 +723,6 @@ public class Login {
                     Menu.userLicenseKey = licenseKey;
 
                     new Handler(Looper.getMainLooper()).post(() -> {
-                        setStatus("Welcome " + licenseKey + " 👑", Color.WHITE, false);
-                        showToast("Welcome " + licenseKey + " 👑");
                         new Menu(context, 1);
                         isSettingsVisible = true;
                         settingsLayout.setVisibility(View.VISIBLE);

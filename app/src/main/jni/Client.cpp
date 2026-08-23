@@ -548,18 +548,20 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
         // --- Signature Key Intro Animation on Horizontal Screen ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
+            Vector2 centerPos(draw.getWidth() / 2.0f, draw.getHeight() / 2.0f);
+            float signatureSize = 140.0f;
 
             if (elapsed < 1200) {
                 // Phase 1: Full black screen, signature text fades in at center
                 draw.DrawBlackScreen(255);
                 float alpha = (float)elapsed / 1200.0f;
                 if (alpha > 1.0f) alpha = 1.0f;
-                draw.DrawSignatureText(Color(255, 255, 255, (int)(alpha * 255)), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
+                draw.DrawSignatureText(Color(255, 255, 255, (int)(alpha * 255)), userLicenseKey.c_str(), centerPos, signatureSize);
             }
             else if (elapsed < 2600) {
                 // Phase 2: Full black screen, signature key in center with bright white glow
                 draw.DrawBlackScreen(255);
-                draw.DrawSignatureText(Color(255, 255, 255, 255), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
+                draw.DrawSignatureText(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize);
             }
             else if (elapsed < 4000) {
                 // Phase 3: Black screen fades to transparent along with signature text
@@ -570,7 +572,7 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 draw.DrawBlackScreen(screenAlpha);
 
                 int textAlpha = (int)(255 * (1.0f - progress));
-                draw.DrawSignatureText(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), Vector2(draw.getWidth() / 2, draw.getHeight() / 2 + 10.0f), 80.0f);
+                draw.DrawSignatureText(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), centerPos, signatureSize);
             }
             else {
                 // Animation finished!

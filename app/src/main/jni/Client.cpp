@@ -545,41 +545,47 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // --- Signature Key Writing Animation on Horizontal Screen ---
+        // --- Ultra-Smooth Cursive Signature Writing Animation ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
             Vector2 centerPos(draw.getWidth() / 2.0f, draw.getHeight() / 2.0f);
-            float signatureSize = 200.0f;
+            float signatureSize = 210.0f;
             if (draw.getWidth() >= 1920 || draw.getHeight() >= 1920) {
-                signatureSize = 230.0f;
+                signatureSize = 240.0f;
             }
 
-            int totalLen = (int)userLicenseKey.length();
-            int typingDuration = 1500;
-            int charDelay = std::max(70, typingDuration / (totalLen > 0 ? totalLen : 1));
+            long long writeDuration = 1800; // 1.8s smooth handwriting sweep
+            long long holdDuration = 1400;  // 1.4s glowing hold
+            long long fadeDuration = 1200;  // 1.2s smooth dissolve into game
 
-            if (elapsed < typingDuration) {
-                // Phase 1: Letter-by-letter writing animation (A D M I N style cursive reveal)
+            if (elapsed < writeDuration) {
+                // Phase 1: Continuous fluid handwriting stroke sweep (smooth ink flow)
                 draw.DrawBlackScreen(255);
-                int charsToShow = std::min((int)(elapsed / charDelay) + 1, totalLen);
-                std::string subText = userLicenseKey.substr(0, charsToShow);
-                draw.DrawSignatureText(Color(255, 255, 255, 255), subText.c_str(), centerPos, signatureSize);
+                float linearProgress = (float)elapsed / (float)writeDuration;
+                // Natural handwriting cubic ease-out
+                float easeProgress = 1.0f - powf(1.0f - linearProgress, 2.4f);
+                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize, easeProgress);
             }
-            else if (elapsed < 3000) {
-                // Phase 2: Complete signature text glowing brightly at center
+            else if (elapsed < writeDuration + holdDuration) {
+                // Phase 2: Complete signature text glowing at center with subtle breathing pulse
                 draw.DrawBlackScreen(255);
-                draw.DrawSignatureText(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize);
+                long long holdElapsed = elapsed - writeDuration;
+                float pulse = 0.5f + 0.5f * sinf((float)holdElapsed / 260.0f);
+                int glowAlpha = 225 + (int)(30.0f * pulse);
+                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, glowAlpha), userLicenseKey.c_str(), centerPos, signatureSize, 1.0f);
             }
-            else if (elapsed < 4400) {
-                // Phase 3: Black screen and signature text smoothly fade out into game
-                float progress = (elapsed - 3000) / 1400.0f; // 0.0 to 1.0
-                if (progress > 1.0f) progress = 1.0f;
+            else if (elapsed < writeDuration + holdDuration + fadeDuration) {
+                // Phase 3: Smooth dissolve fade-out into game
+                long long fadeElapsed = elapsed - (writeDuration + holdDuration);
+                float fadeProgress = (float)fadeElapsed / (float)fadeDuration;
+                if (fadeProgress > 1.0f) fadeProgress = 1.0f;
 
-                int screenAlpha = (int)(255 * (1.0f - progress));
+                float smoothFade = fadeProgress * fadeProgress * (3.0f - 2.0f * fadeProgress);
+                int screenAlpha = (int)(255 * (1.0f - smoothFade));
+                int textAlpha = (int)(255 * (1.0f - smoothFade));
+
                 draw.DrawBlackScreen(screenAlpha);
-
-                int textAlpha = (int)(255 * (1.0f - progress));
-                draw.DrawSignatureText(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), centerPos, signatureSize);
+                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), centerPos, signatureSize, 1.0f);
             }
             else {
                 // Animation finished!

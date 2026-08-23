@@ -93,6 +93,13 @@ public:
         return;
     }
 
+    void DrawSmoothSignatureWriting(Color color, const char *str, Vector2 pos, float size, float progress) {
+        if (isValid() && str != nullptr) {
+            _env->CallVoidMethod(_cvsView, _env->GetMethodID(_env->GetObjectClass(_cvsView), "DrawSmoothSignatureWriting", "(Landroid/graphics/Canvas;IIIILjava/lang/String;FFFF)V"), _cvs, (int) color.a, (int) color.r, (int) color.g, (int) color.b, _env->NewStringUTF(str), pos.X, pos.Y, size, progress);
+        }
+        return;
+    }
+
     void DrawTextLeft(Color color, const char *str, Vector2 pos, float size) {
         if (isValid()) {
             _env->CallVoidMethod(_cvsView,_env->GetMethodID(_env->GetObjectClass(_cvsView), "DrawTextLeft","(Landroid/graphics/Canvas;IIIIFLjava/lang/String;FFF)V"),_cvs, (int) color.a, (int) color.r, (int) color.g, (int) color.b,0.6f, _env->NewStringUTF(str), pos.X, pos.Y, size);

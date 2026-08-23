@@ -121,14 +121,42 @@ public class DrawView extends View implements Runnable {
     }
 
     public void DrawSignatureText(Canvas cvs, int a, int r, int g, int b, String txt, float posX, float posY, float size) {
-        if (txt == null || txt.isEmpty()) return;
+        DrawSmoothSignatureWriting(cvs, a, r, g, b, txt, posX, posY, size, 1.0f);
+    }
+
+    public void DrawSmoothSignatureWriting(Canvas cvs, int a, int r, int g, int b, String txt, float posX, float posY, float size, float progress) {
+        if (txt == null || txt.isEmpty() || progress <= 0f) return;
         mSignaturePaint.setColor(Color.rgb(r, g, b));
         mSignaturePaint.setAlpha(a);
         mSignaturePaint.setTextSize(size);
         mSignaturePaint.setFakeBoldText(true);
-        mSignaturePaint.setShadowLayer(25.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+        mSignaturePaint.setShadowLayer(28.0f, 0.0f, 0.0f, Color.argb(Math.min(a, 220), r, g, b));
+
         float yPos = posY - ((mSignaturePaint.descent() + mSignaturePaint.ascent()) / 2f);
-        cvs.drawText(txt, posX, yPos, mSignaturePaint);
+        float totalWidth = mSignaturePaint.measureText(txt);
+        float leftX = posX - (totalWidth / 2f);
+
+        if (progress >= 1.0f) {
+            cvs.drawText(txt, posX, yPos, mSignaturePaint);
+        } else {
+            float clampedProgress = Math.max(0f, Math.min(1.0f, progress));
+            float currentRevealX = leftX + (totalWidth * clampedProgress);
+
+            cvs.save();
+            cvs.clipRect(leftX - 30f, posY - size, currentRevealX, posY + size);
+            cvs.drawText(txt, posX, yPos, mSignaturePaint);
+            cvs.restore();
+
+            // Glowing pen nib / ink particle at current write point
+            if (a > 30) {
+                Paint tipPaint = new Paint();
+                tipPaint.setAntiAlias(true);
+                tipPaint.setColor(Color.WHITE);
+                tipPaint.setAlpha(Math.min(a, 240));
+                tipPaint.setShadowLayer(18.0f, 0.0f, 0.0f, Color.rgb(255, 215, 0));
+                cvs.drawCircle(currentRevealX, yPos - 5f, 4.5f, tipPaint);
+            }
+        }
         mSignaturePaint.clearShadowLayer();
     }
 

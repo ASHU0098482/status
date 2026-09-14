@@ -105,6 +105,7 @@ std::string LoggedInOwnerID = "";
 
 bool showAnimation = false;
 long long animationStartTime = 0;
+int fovCircleSize = 50;
 
 int frameCount = 0;
 float fpsValue = 0.0f;
@@ -185,9 +186,9 @@ Java_com_ashu_Menu_Functions(JNIEnv *env, jclass clazz) {
     widget.Switch(OBFUSCATE("Silent Aim"), 103);
     widget.Switch(OBFUSCATE("Drag Headshot"), 1055);
     widget.Switch(OBFUSCATE("Sniper Auto Aim"), 500);
-    widget.Switch(OBFUSCATE("Up Player"), 20);
     widget.Switch(OBFUSCATE("Show Fov"), 16);
     widget.SeekBar(OBFUSCATE("Adjust Headshot Rate"), 0, 100, "%", 104);
+    widget.SeekBar(OBFUSCATE("Adjust FOV Size"), 10, 100, "%", 1077);
 }
 
 
@@ -240,6 +241,9 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
         case 104:
             pAimbotPlayer.aimbotFOV = value;
             SendFOV(104, value);
+            break;
+        case 1077:
+            fovCircleSize = value;
             break;
 
         case 105:
@@ -522,27 +526,28 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
         draw.DrawText(Color(255, 184, 0, 255), fpsText, fpsPos, 30.0f);
 
         if (pEspPlayer.espDrawFov) {
-            // Draw a White circle with thicker line (4.0 thickness) at center of screen.
-            // Radius scales dynamically with "Adjust Headshot Rate" (pAimbotPlayer.aimbotFOV: 0-100)
-            float radius = 50.0f + (pAimbotPlayer.aimbotFOV * 4.0f);
+            // Draw a White circle with thicker line (4.0 thickness) at exact screen center.
+            // Radius scales dynamically with "Adjust FOV Size" (fovCircleSize: 10-100)
+            float radius = 35.0f + (fovCircleSize * 3.5f);
+            Vector2 screenCenter((float)draw.getWidth() / 2.0f, (float)draw.getHeight() / 2.0f);
             // Draw glowing outer layers in White
-            draw.DrawCircle(Color(255, 255, 255, 35), 8.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius + 2.0f);
-            draw.DrawCircle(Color(255, 255, 255, 75), 5.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius + 1.0f);
+            draw.DrawCircle(Color(255, 255, 255, 35), 8.0f, screenCenter, radius + 2.0f);
+            draw.DrawCircle(Color(255, 255, 255, 75), 5.0f, screenCenter, radius + 1.0f);
             // Main circle in White
-            draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
+            draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, screenCenter, radius);
         }
 
-        // --- 2-Second Activation Loading Sequence with Checkmark, GOOD TO GO & Success Audio ---
+        // --- 4-Second Activation Loading Sequence with Checkmark, GOOD TO GO & Success Audio ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
-            long long loadDuration = 2000; // 2.0s progress from 0% to 100%
-            long long holdDuration = 850;  // 0.85s hold displaying Checkmark + "GOOD TO GO" + chime
-            long long fadeDuration = 400;  // 0.4s smooth dissolve fade into game
+            long long loadDuration = 4000; // 4.0s progress from 0% to 100%
+            long long holdDuration = 1200; // 1.2s hold displaying Checkmark + "GOOD TO GO" + chime
+            long long fadeDuration = 600;  // 0.6s smooth dissolve fade into game
 
             const char *brandName = "ASHU PANEL";
 
             if (elapsed < loadDuration) {
-                // Phase 1: 0% to 100% loading with dynamic feature cycling
+                // Phase 1: 0% to 100% loading with dynamic feature cycling (4.0s)
                 float progress = (float)elapsed / (float)loadDuration;
                 draw.DrawActivationLoading(brandName, progress, false, 1.0f);
             }

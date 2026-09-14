@@ -92,9 +92,17 @@ public class Menu {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSPARENT);
-        windowManagerDrawViewParams.gravity = Gravity.CENTER;
+        windowManagerDrawViewParams.gravity = Gravity.TOP | Gravity.LEFT;
+        windowManagerDrawViewParams.x = 0;
+        windowManagerDrawViewParams.y = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            windowManagerDrawViewParams.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
         windowManager.addView(drawView, windowManagerDrawViewParams);
     }
 
@@ -643,8 +651,49 @@ public class Menu {
         tabContentContainers.get(currentTab).addView(linearLayout);
     }
 
+    public static boolean isMasterActive = false;
+    private static final java.util.List<View> lockedRowViews = new java.util.ArrayList<>();
+    private static final java.util.List<SwitchStyle> lockedSwitches = new java.util.ArrayList<>();
+    private static final java.util.List<SeekBar> lockedSeekBars = new java.util.ArrayList<>();
+
+    public static void showLockedToast() {
+        if (context == null) return;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                Toast toast = Toast.makeText(context, "🔒 Please turn ON 'Activate All' first!", Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.CENTER, 0, utils.FixDP(60));
+                toast.show();
+            } catch (Exception ignored) {}
+        });
+    }
+
+    public static void setFeaturesLocked(boolean unlocked) {
+        isMasterActive = unlocked;
+        for (View v : lockedRowViews) {
+            v.animate().alpha(unlocked ? 1.0f : 0.40f).setDuration(220).start();
+        }
+        for (SwitchStyle sw : lockedSwitches) {
+            sw.setEnabled(unlocked);
+            if (!unlocked && sw.isChecked()) {
+                sw.setChecked(false);
+            }
+        }
+        for (SeekBar sb : lockedSeekBars) {
+            sb.setEnabled(unlocked);
+        }
+        if (statusBannerView != null) {
+            if (unlocked) {
+                statusBannerView.setText("⚡ ALL FEATURES UNLOCKED");
+                statusBannerView.setTextColor(Color.parseColor("#00E676"));
+            } else {
+                statusBannerView.setText("🔒 LOCKED: ACTIVATE ALL REQUIRED");
+                statusBannerView.setTextColor(Color.parseColor("#FF5252"));
+            }
+        }
+    }
+
     /**
-     * Add a switch to the current tab - Compact row
+     * Add a switch to the current tab - Compact row with locking support
      */
     public static void addSwitch(String name, final int ID) {
         LinearLayout rowCard = new LinearLayout(context);
@@ -678,8 +727,32 @@ public class Menu {
 
         textView.setTextColor(switchStyle.isChecked() ? colorOn : colorOff);
 
+        final boolean isMasterSwitch = (ID == 102);
+
+        if (!isMasterSwitch) {
+            lockedRowViews.add(rowCard);
+            lockedSwitches.add(switchStyle);
+            rowCard.setAlpha(isMasterActive ? 1.0f : 0.40f);
+            switchStyle.setEnabled(isMasterActive);
+        } else {
+            rowCard.setAlpha(1.0f);
+            switchStyle.setEnabled(true);
+        }
+
         switchStyle.setOnCheckedChangeListener((view, isChecked) -> {
+            if (!isMasterSwitch && !isMasterActive) {
+                if (isChecked) {
+                    switchStyle.setChecked(false);
+                    showLockedToast();
+                }
+                return;
+            }
+
             ChangesID(ID, 0);
+
+            if (isMasterSwitch) {
+                setFeaturesLocked(isChecked);
+            }
 
             if (isChecked) {
                 showActiveToast(name);
@@ -695,7 +768,13 @@ public class Menu {
             colorAnimation.start();
         });
 
-        rowCard.setOnClickListener(view -> switchStyle.setChecked(!switchStyle.isChecked()));
+        rowCard.setOnClickListener(view -> {
+            if (!isMasterSwitch && !isMasterActive) {
+                showLockedToast();
+                return;
+            }
+            switchStyle.setChecked(!switchStyle.isChecked());
+        });
 
         rowCard.addView(textView);
         rowCard.addView(switchStyle);
@@ -831,6 +910,25 @@ public class Menu {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
+        });
+
+        lockedRowViews.add(rowCard);
+        lockedSeekBars.add(seekBar);
+        rowCard.setAlpha(isMasterActive ? 1.0f : 0.40f);
+        seekBar.setEnabled(isMasterActive);
+
+        rowCard.setOnClickListener(view -> {
+            if (!isMasterActive) {
+                showLockedToast();
+            }
+        });
+
+        seekBar.setOnTouchListener((view, motionEvent) -> {
+            if (!isMasterActive) {
+                showLockedToast();
+                return true;
+            }
+            return false;
         });
 
         rowCard.addView(textView);

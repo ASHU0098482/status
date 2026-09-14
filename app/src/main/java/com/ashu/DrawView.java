@@ -60,6 +60,21 @@ public class DrawView extends View implements Runnable {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
+        }
+    }
+
+    @Override
     protected void onDraw(Canvas canvas)
     {
         if (canvas != null && getVisibility() == VISIBLE)
@@ -211,81 +226,86 @@ public class DrawView extends View implements Runnable {
 
         float cx = width / 2.0f;
         float cy = height / 2.0f;
+        float H = (float) height;
+        float W = (float) width;
 
-        // 1. Dark Screen Backdrop (Semi-transparent overlay)
-        int bgAlpha = (int) (225 * alpha);
-        mFilledPaint.setColor(Color.argb(bgAlpha, 8, 8, 12));
+        // 1. Full-Screen Dark Cinematic Backdrop
+        int bgAlpha = (int) (240 * alpha);
+        mFilledPaint.setColor(Color.argb(bgAlpha, 6, 6, 10));
         cvs.drawRect(0, 0, width, height, mFilledPaint);
 
-        // Subtle glowing horizontal guideline behind the brand name
+        // Futuristic glowing horizontal guideline behind the brand name
         Paint glowLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         glowLinePaint.setStyle(Paint.Style.STROKE);
-        glowLinePaint.setStrokeWidth(2.0f);
-        glowLinePaint.setColor(Color.argb((int)(60 * alpha), 255, 184, 0));
-        cvs.drawLine(cx - 220f, cy - 75f, cx + 220f, cy - 75f, glowLinePaint);
+        glowLinePaint.setStrokeWidth(3.0f);
+        glowLinePaint.setColor(Color.argb((int)(80 * alpha), 255, 184, 0));
+        float lineHalfWidth = Math.min(W * 0.42f, 650.0f);
+        cvs.drawLine(cx - lineHalfWidth, cy - (H * 0.22f), cx + lineHalfWidth, cy - (H * 0.22f), glowLinePaint);
 
-        // 2. Brand Name (e.g. ASHU PANEL)
+        // 2. Huge Full-Screen Brand Title (e.g. ASHU PANEL)
         String brand = (brandName != null && !brandName.isEmpty()) ? brandName : Menu.getBrandName();
-        float brandSize = Math.max(34.0f, Math.min(46.0f, width * 0.045f));
+        float brandSize = Math.max(72.0f, H * 0.13f);
         mAnimBrandPaint.setTextSize(brandSize);
-        mAnimBrandPaint.setColor(Color.argb((int)(255 * alpha), 255, 184, 0)); // Bright Gold
-        mAnimBrandPaint.setShadowLayer(24.0f, 0f, 0f, Color.argb((int)(210 * alpha), 255, 184, 0));
-        float brandY = cy - 75f;
+        mAnimBrandPaint.setColor(Color.argb((int)(255 * alpha), 255, 184, 0)); // Intense Gold
+        mAnimBrandPaint.setShadowLayer(36.0f, 0f, 0f, Color.argb((int)(230 * alpha), 255, 184, 0));
+        float brandY = cy - (H * 0.22f);
         cvs.drawText(brand, cx, brandY, mAnimBrandPaint);
         mAnimBrandPaint.clearShadowLayer();
 
-        // 3. Initializing Connection Subtitle
-        float subSize = Math.max(13.0f, brandSize * 0.36f);
+        // 3. Prominent "INITIALIZING CONNECTION..." Subtitle
+        float subSize = Math.max(24.0f, H * 0.046f);
         mAnimSubPaint.setTextSize(subSize);
-        mAnimSubPaint.setColor(Color.argb((int)(240 * alpha), 0, 230, 118)); // Cyber Emerald Green
-        mAnimSubPaint.setShadowLayer(14.0f, 0f, 0f, Color.argb((int)(160 * alpha), 0, 230, 118));
-        float subY = brandY + (subSize * 2.2f);
+        mAnimSubPaint.setColor(Color.argb((int)(245 * alpha), 0, 230, 118)); // Cyber Emerald Green
+        mAnimSubPaint.setShadowLayer(22.0f, 0f, 0f, Color.argb((int)(200 * alpha), 0, 230, 118));
+        float subY = brandY + (subSize * 2.1f);
         cvs.drawText("INITIALIZING CONNECTION...", cx, subY, mAnimSubPaint);
         mAnimSubPaint.clearShadowLayer();
 
-        // 4. Dynamic Cycling Feature Activation Text
+        // 4. Dynamic Cycling Feature Activation Text (4.0-second lifecycle)
         String featureText;
         if (isDone || progress >= 1.0f) {
-            featureText = "✨ All Systems Synchronized & Active";
-        } else if (progress < 0.25f) {
-            featureText = "⚡ Activating Auto ESP...";
-        } else if (progress < 0.50f) {
-            featureText = "🎯 Activating Line & Box ESP...";
-        } else if (progress < 0.75f) {
-            featureText = "⚡ Activating Aimbot & Headshot...";
+            featureText = "✨ All Systems Synchronized & Protected";
+        } else if (progress < 0.20f) {
+            featureText = "⚡ Activating Auto ESP System...";
+        } else if (progress < 0.40f) {
+            featureText = "🎯 Initializing Line & Box Trackers...";
+        } else if (progress < 0.60f) {
+            featureText = "⚡ Calibrating Silent Aim & Headshot...";
+        } else if (progress < 0.80f) {
+            featureText = "🎯 Configuring Sniper Auto Aim...";
         } else {
-            featureText = "🛡️ Activating Bullet Track & Security...";
+            featureText = "🛡️ Synchronizing Bullet Track & Security...";
         }
 
-        float featureSize = Math.max(12.5f, brandSize * 0.32f);
+        float featureSize = Math.max(22.0f, H * 0.040f);
         mAnimFeaturePaint.setTextSize(featureSize);
-        mAnimFeaturePaint.setColor(Color.argb((int)(230 * alpha), 226, 232, 240)); // Crisp Slate White
-        float featureY = subY + (featureSize * 2.4f);
+        mAnimFeaturePaint.setColor(Color.argb((int)(240 * alpha), 241, 245, 249)); // High-Contrast Slate White
+        float featureY = subY + (featureSize * 2.3f);
         cvs.drawText(featureText, cx, featureY, mAnimFeaturePaint);
 
         if (!isDone && progress < 1.0f) {
-            // 5. Loading Bar & Percentage Counter (0% to 100% in 2 sec)
-            float barWidth = Math.min(320.0f, width * 0.65f);
-            float barHeight = 8.0f;
+            // 5. Large Full-Screen Loading Bar & Percentage Counter (4.0s progress)
+            float barWidth = Math.min(W * 0.68f, 920.0f);
+            float barHeight = Math.max(20.0f, H * 0.024f);
             float barLeft = cx - (barWidth / 2.0f);
-            float barTop = featureY + 28.0f;
+            float barTop = featureY + (H * 0.06f);
             float barRight = cx + (barWidth / 2.0f);
             float barBottom = barTop + barHeight;
 
             // Track background
-            mAnimProgressBgPaint.setColor(Color.argb((int)(180 * alpha), 26, 26, 36));
+            mAnimProgressBgPaint.setColor(Color.argb((int)(200 * alpha), 22, 22, 32));
             android.graphics.RectF trackRect = new android.graphics.RectF(barLeft, barTop, barRight, barBottom);
-            cvs.drawRoundRect(trackRect, 4.0f, 4.0f, mAnimProgressBgPaint);
+            cvs.drawRoundRect(trackRect, barHeight * 0.5f, barHeight * 0.5f, mAnimProgressBgPaint);
 
             // Track border
             Paint trackBorder = new Paint(Paint.ANTI_ALIAS_FLAG);
             trackBorder.setStyle(Paint.Style.STROKE);
-            trackBorder.setStrokeWidth(1.0f);
-            trackBorder.setColor(Color.argb((int)(100 * alpha), 60, 60, 80));
-            cvs.drawRoundRect(trackRect, 4.0f, 4.0f, trackBorder);
+            trackBorder.setStrokeWidth(2.0f);
+            trackBorder.setColor(Color.argb((int)(140 * alpha), 70, 70, 95));
+            cvs.drawRoundRect(trackRect, barHeight * 0.5f, barHeight * 0.5f, trackBorder);
 
             // Fill
-            float clampedProgress = Math.max(0.02f, Math.min(1.0f, progress));
+            float clampedProgress = Math.max(0.015f, Math.min(1.0f, progress));
             float fillRight = barLeft + (barWidth * clampedProgress);
             android.graphics.RectF fillRect = new android.graphics.RectF(barLeft, barTop, fillRight, barBottom);
 
@@ -296,60 +316,64 @@ public class DrawView extends View implements Runnable {
                     Shader.TileMode.CLAMP
             );
             mAnimProgressFillPaint.setShader(fillGrad);
-            mAnimProgressFillPaint.setShadowLayer(16.0f, 0f, 0f, Color.argb((int)(180 * alpha), 0, 230, 118));
-            cvs.drawRoundRect(fillRect, 4.0f, 4.0f, mAnimProgressFillPaint);
+            mAnimProgressFillPaint.setShadowLayer(26.0f, 0f, 0f, Color.argb((int)(220 * alpha), 0, 230, 118));
+            cvs.drawRoundRect(fillRect, barHeight * 0.5f, barHeight * 0.5f, mAnimProgressFillPaint);
             mAnimProgressFillPaint.clearShadowLayer();
             mAnimProgressFillPaint.setShader(null);
 
             // Percentage Text
             int pct = (int) (clampedProgress * 100);
             String pctStr = "[ " + pct + "% ]";
-            mAnimSubPaint.setTextSize(Math.max(13.0f, brandSize * 0.33f));
+            float pctSize = Math.max(26.0f, H * 0.052f);
+            mAnimSubPaint.setTextSize(pctSize);
             mAnimSubPaint.setColor(Color.argb((int)(255 * alpha), 255, 184, 0));
-            cvs.drawText(pctStr, cx, barBottom + 26.0f, mAnimSubPaint);
+            mAnimSubPaint.setShadowLayer(16.0f, 0f, 0f, Color.argb((int)(180 * alpha), 255, 184, 0));
+            cvs.drawText(pctStr, cx, barBottom + (pctSize * 1.35f), mAnimSubPaint);
+            mAnimSubPaint.clearShadowLayer();
         } else {
-            // 6. Completion State: Glowing Emerald Checkmark + "GOOD TO GO"
-            float checkCenterY = featureY + 45.0f;
-            float circleRadius = 26.0f;
+            // 6. Massive Full-Screen Completion State: Glowing Emerald Checkmark + "GOOD TO GO"
+            float checkCenterY = featureY + (H * 0.13f);
+            float circleRadius = Math.max(48.0f, H * 0.09f);
 
             // Glowing Green Background Circle
-            mAnimCheckCirclePaint.setColor(Color.argb((int)(240 * alpha), 0, 200, 83));
-            mAnimCheckCirclePaint.setShadowLayer(32.0f, 0f, 0f, Color.argb((int)(220 * alpha), 0, 230, 118));
+            mAnimCheckCirclePaint.setColor(Color.argb((int)(245 * alpha), 0, 200, 83));
+            mAnimCheckCirclePaint.setShadowLayer(45.0f, 0f, 0f, Color.argb((int)(240 * alpha), 0, 230, 118));
             cvs.drawCircle(cx, checkCenterY, circleRadius, mAnimCheckCirclePaint);
             mAnimCheckCirclePaint.clearShadowLayer();
 
             // Inner circle ring
             Paint checkRing = new Paint(Paint.ANTI_ALIAS_FLAG);
             checkRing.setStyle(Paint.Style.STROKE);
-            checkRing.setStrokeWidth(2.0f);
+            checkRing.setStrokeWidth(3.5f);
             checkRing.setColor(Color.argb((int)(255 * alpha), 255, 255, 255));
             cvs.drawCircle(cx, checkCenterY, circleRadius, checkRing);
 
-            // Checkmark Vector Path (✓)
+            // Large Checkmark Vector Path (✓)
             android.graphics.Path checkPath = new android.graphics.Path();
-            checkPath.moveTo(cx - 11.0f, checkCenterY + 1.0f);
-            checkPath.lineTo(cx - 3.0f, checkCenterY + 9.0f);
-            checkPath.lineTo(cx + 12.0f, checkCenterY - 7.0f);
+            checkPath.moveTo(cx - (circleRadius * 0.44f), checkCenterY + (circleRadius * 0.05f));
+            checkPath.lineTo(cx - (circleRadius * 0.12f), checkCenterY + (circleRadius * 0.40f));
+            checkPath.lineTo(cx + (circleRadius * 0.48f), checkCenterY - (circleRadius * 0.32f));
 
-            mAnimCheckPaint.setStrokeWidth(4.5f);
+            mAnimCheckPaint.setStrokeWidth(8.5f);
             mAnimCheckPaint.setColor(Color.argb((int)(255 * alpha), 255, 255, 255));
-            mAnimCheckPaint.setShadowLayer(10.0f, 0f, 0f, Color.argb((int)(200 * alpha), 0, 0, 0));
+            mAnimCheckPaint.setShadowLayer(16.0f, 0f, 0f, Color.argb((int)(200 * alpha), 0, 0, 0));
             cvs.drawPath(checkPath, mAnimCheckPaint);
             mAnimCheckPaint.clearShadowLayer();
 
-            // "GOOD TO GO" Text
-            float goodToGoSize = Math.max(26.0f, brandSize * 0.65f);
+            // Massive "GOOD TO GO" Text
+            float goodToGoSize = Math.max(54.0f, H * 0.125f);
             mAnimBrandPaint.setTextSize(goodToGoSize);
             mAnimBrandPaint.setColor(Color.argb((int)(255 * alpha), 0, 230, 118)); // Neon Green
-            mAnimBrandPaint.setShadowLayer(26.0f, 0f, 0f, Color.argb((int)(220 * alpha), 0, 230, 118));
-            float goodToGoY = checkCenterY + circleRadius + (goodToGoSize * 1.25f);
+            mAnimBrandPaint.setShadowLayer(35.0f, 0f, 0f, Color.argb((int)(240 * alpha), 0, 230, 118));
+            float goodToGoY = checkCenterY + circleRadius + (goodToGoSize * 1.15f);
             cvs.drawText("GOOD TO GO", cx, goodToGoY, mAnimBrandPaint);
             mAnimBrandPaint.clearShadowLayer();
 
             // Subtitle status below GOOD TO GO
-            mAnimFeaturePaint.setTextSize(Math.max(11.0f, brandSize * 0.28f));
-            mAnimFeaturePaint.setColor(Color.argb((int)(190 * alpha), 148, 163, 184));
-            cvs.drawText("ALL FEATURES ACTIVE & SECURE", cx, goodToGoY + 22.0f, mAnimFeaturePaint);
+            float subGoodSize = Math.max(18.0f, H * 0.036f);
+            mAnimFeaturePaint.setTextSize(subGoodSize);
+            mAnimFeaturePaint.setColor(Color.argb((int)(210 * alpha), 148, 163, 184));
+            cvs.drawText("ALL FEATURES ACTIVE & SECURE", cx, goodToGoY + (subGoodSize * 1.5f), mAnimFeaturePaint);
         }
     }
 

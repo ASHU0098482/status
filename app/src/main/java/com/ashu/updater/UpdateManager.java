@@ -435,6 +435,8 @@ public class UpdateManager {
 
     private UpdateConfig fetchRemoteConfig() {
         String[] urlsToTry = new String[] {
+                "https://raw.githubusercontent.com/ASHU0098482/status/HEAD/config.json?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
+                "https://raw.githubusercontent.com/ASHU0098482/status/HEAD/config.json",
                 "https://raw.githubusercontent.com/ASHU0098482/status/main/config.json?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
                 "https://raw.githubusercontent.com/ASHU0098482/status/main/config.json"
         };

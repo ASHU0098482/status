@@ -10,6 +10,7 @@ public class RemoteConfig {
     // ==========================================
     // REPLACE THIS URL WITH YOUR JSON FILE URL!
     // ==========================================
+    public static final String CONFIG_HEAD_URL = "https://raw.githubusercontent.com/ASHU0098482/status/HEAD/config.json";
     public static final String CONFIG_URL = "https://raw.githubusercontent.com/ASHU0098482/status/main/config.json";
 
     public static boolean isOnline = true;
@@ -49,8 +50,9 @@ public class RemoteConfig {
             
             // Query raw github with dynamic timestamp and random tokens to completely bypass caching
             String[] urlsToTry = new String[] {
+                CONFIG_HEAD_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
+                CONFIG_HEAD_URL,
                 CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
-                CONFIG_URL + "?v=" + System.currentTimeMillis() + "&b=" + (int)(Math.random() * 1000000),
                 CONFIG_URL
             };
 

@@ -188,13 +188,6 @@ Java_com_ashu_Menu_Functions(JNIEnv *env, jclass clazz) {
     widget.Switch(OBFUSCATE("Up Player"), 20);
     widget.Switch(OBFUSCATE("Show Fov"), 16);
     widget.SeekBar(OBFUSCATE("Adjust Headshot Rate"), 0, 100, "%", 104);
-
-    // ---------------- ESP Features ----------------
-    widget.Category(OBFUSCATE("ESP"));
-    widget.Switch(OBFUSCATE("ESP Line"), 1);
-    widget.Switch(OBFUSCATE("ESP Box"), 2);
-    widget.Switch(OBFUSCATE("ESP Name"), 4);
-    widget.Switch(OBFUSCATE("ESP Health"), 9);
 }
 
 
@@ -513,12 +506,6 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
     }
 
     if (draw.isValid()) {
-        // Automatically start signature key intro animation on initial load after login
-        if (animationStartTime == 0) {
-            animationStartTime = getCurrentTimeMs();
-            showAnimation = true;
-        }
-
         // Real-time FPS Calculation and Drawing in Bottom-Left Corner
         long long currentTime = getCurrentTimeMs();
         frameCount++;
@@ -545,45 +532,32 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             draw.DrawCircle(Color(255, 255, 255, 255), 4.0f, Vector2(draw.getWidth() / 2, draw.getHeight() / 2), radius);
         }
 
-        // --- Ultra-Smooth Cursive Signature Writing Animation (Exactly 3.0 sec total) ---
+        // --- 2-Second Activation Loading Sequence with Checkmark, GOOD TO GO & Success Audio ---
         if (showAnimation) {
             long long elapsed = getCurrentTimeMs() - animationStartTime;
-            Vector2 centerPos(draw.getWidth() / 2.0f, draw.getHeight() / 2.0f);
-            float signatureSize = 210.0f;
-            if (draw.getWidth() >= 1920 || draw.getHeight() >= 1920) {
-                signatureSize = 240.0f;
-            }
+            long long loadDuration = 2000; // 2.0s progress from 0% to 100%
+            long long holdDuration = 850;  // 0.85s hold displaying Checkmark + "GOOD TO GO" + chime
+            long long fadeDuration = 400;  // 0.4s smooth dissolve fade into game
 
-            long long writeDuration = 1900; // 1.9s graceful letter-by-letter handwriting sweep + swash
-            long long holdDuration = 600;   // 0.6s glowing neon hold with breathing pulse
-            long long fadeDuration = 500;   // 0.5s smooth dissolve into game
+            const char *brandName = "ASHU PANEL";
 
-            if (elapsed < writeDuration) {
-                // Phase 1: Real-time cursive handwriting animation (letter-by-letter with glowing fountain pen spark nib)
-                draw.DrawBlackScreen(255);
-                float linearProgress = (float)elapsed / (float)writeDuration;
-                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, 255), userLicenseKey.c_str(), centerPos, signatureSize, linearProgress);
+            if (elapsed < loadDuration) {
+                // Phase 1: 0% to 100% loading with dynamic feature cycling
+                float progress = (float)elapsed / (float)loadDuration;
+                draw.DrawActivationLoading(brandName, progress, false, 1.0f);
             }
-            else if (elapsed < writeDuration + holdDuration) {
-                // Phase 2: Complete signature text glowing brightly at center with subtle breathing pulse
-                draw.DrawBlackScreen(255);
-                long long holdElapsed = elapsed - writeDuration;
-                float pulse = 0.5f + 0.5f * sinf((float)holdElapsed / 95.0f);
-                int glowAlpha = 230 + (int)(25.0f * pulse);
-                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, glowAlpha), userLicenseKey.c_str(), centerPos, signatureSize, 1.0f);
+            else if (elapsed < loadDuration + holdDuration) {
+                // Phase 2: Complete! Glowing green checkmark + "GOOD TO GO" + audio chime
+                draw.DrawActivationLoading(brandName, 1.0f, true, 1.0f);
             }
-            else if (elapsed < writeDuration + holdDuration + fadeDuration) {
+            else if (elapsed < loadDuration + holdDuration + fadeDuration) {
                 // Phase 3: Smooth dissolve fade-out into game
-                long long fadeElapsed = elapsed - (writeDuration + holdDuration);
+                long long fadeElapsed = elapsed - (loadDuration + holdDuration);
                 float fadeProgress = (float)fadeElapsed / (float)fadeDuration;
                 if (fadeProgress > 1.0f) fadeProgress = 1.0f;
-
                 float smoothFade = fadeProgress * fadeProgress * (3.0f - 2.0f * fadeProgress);
-                int screenAlpha = (int)(255 * (1.0f - smoothFade));
-                int textAlpha = (int)(255 * (1.0f - smoothFade));
-
-                draw.DrawBlackScreen(screenAlpha);
-                draw.DrawSmoothSignatureWriting(Color(255, 255, 255, textAlpha), userLicenseKey.c_str(), centerPos, signatureSize, 1.0f);
+                float alpha = 1.0f - smoothFade;
+                draw.DrawActivationLoading(brandName, 1.0f, true, alpha);
             }
             else {
                 // Animation finished!

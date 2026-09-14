@@ -7,6 +7,11 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.media.ToneGenerator;
+import android.net.Uri;
 import android.view.View;
 
 import java.util.Date;
@@ -24,6 +29,15 @@ public class DrawView extends View implements Runnable {
     Paint mPenTipPaint;
     Paint mPenGlowPaint;
     Paint mSparkPaint;
+    Paint mAnimBrandPaint;
+    Paint mAnimSubPaint;
+    Paint mAnimFeaturePaint;
+    Paint mAnimProgressBgPaint;
+    Paint mAnimProgressFillPaint;
+    Paint mAnimCheckPaint;
+    Paint mAnimCheckCirclePaint;
+    private static boolean soundPlayed = false;
+    private static Context sContext;
     android.graphics.Path mClipPath = new android.graphics.Path();
     android.graphics.Path mSwashPath = new android.graphics.Path();
 
@@ -35,6 +49,7 @@ public class DrawView extends View implements Runnable {
     public DrawView(Context context)
     {
         super(context, null, 0);
+        sContext = context;
         InitializePaints();
         setFocusableInTouchMode(false);
         setBackgroundColor(0);
@@ -129,6 +144,213 @@ public class DrawView extends View implements Runnable {
         mSparkPaint = new Paint();
         mSparkPaint.setAntiAlias(true);
         mSparkPaint.setStyle(Paint.Style.FILL);
+
+        mAnimBrandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimBrandPaint.setTextAlign(Paint.Align.CENTER);
+        mAnimBrandPaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+
+        mAnimSubPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimSubPaint.setTextAlign(Paint.Align.CENTER);
+        mAnimSubPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+
+        mAnimFeaturePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimFeaturePaint.setTextAlign(Paint.Align.CENTER);
+        mAnimFeaturePaint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+
+        mAnimProgressBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimProgressBgPaint.setStyle(Paint.Style.FILL);
+
+        mAnimProgressFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimProgressFillPaint.setStyle(Paint.Style.FILL);
+
+        mAnimCheckPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimCheckPaint.setStyle(Paint.Style.STROKE);
+        mAnimCheckPaint.setStrokeCap(Paint.Cap.ROUND);
+        mAnimCheckPaint.setStrokeJoin(Paint.Join.ROUND);
+
+        mAnimCheckCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mAnimCheckCirclePaint.setStyle(Paint.Style.FILL);
+    }
+
+    public static void playSuccessSound() {
+        new Thread(() -> {
+            try {
+                ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 110);
+                Thread.sleep(120);
+                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 220);
+            } catch (Throwable t) {
+                try {
+                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    if (sContext != null) {
+                        Ringtone r = RingtoneManager.getRingtone(sContext, notification);
+                        if (r != null) r.play();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }).start();
+    }
+
+    public void DrawActivationLoading(Canvas cvs, String brandName, float progress, boolean isDone, float alpha) {
+        if (cvs == null || alpha <= 0.01f) return;
+
+        // Reset soundPlayed state when starting a new animation run
+        if (progress < 0.1f && !isDone) {
+            soundPlayed = false;
+        }
+
+        // Trigger success sound when reaching completion
+        if ((isDone || progress >= 1.0f) && !soundPlayed) {
+            soundPlayed = true;
+            playSuccessSound();
+        }
+
+        int width = getWidth();
+        int height = getHeight();
+        if (width <= 0 || height <= 0) return;
+
+        float cx = width / 2.0f;
+        float cy = height / 2.0f;
+
+        // 1. Dark Screen Backdrop (Semi-transparent overlay)
+        int bgAlpha = (int) (225 * alpha);
+        mFilledPaint.setColor(Color.argb(bgAlpha, 8, 8, 12));
+        cvs.drawRect(0, 0, width, height, mFilledPaint);
+
+        // Subtle glowing horizontal guideline behind the brand name
+        Paint glowLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        glowLinePaint.setStyle(Paint.Style.STROKE);
+        glowLinePaint.setStrokeWidth(2.0f);
+        glowLinePaint.setColor(Color.argb((int)(60 * alpha), 255, 184, 0));
+        cvs.drawLine(cx - 220f, cy - 75f, cx + 220f, cy - 75f, glowLinePaint);
+
+        // 2. Brand Name (e.g. ASHU PANEL)
+        String brand = (brandName != null && !brandName.isEmpty()) ? brandName : Menu.getBrandName();
+        float brandSize = Math.max(34.0f, Math.min(46.0f, width * 0.045f));
+        mAnimBrandPaint.setTextSize(brandSize);
+        mAnimBrandPaint.setColor(Color.argb((int)(255 * alpha), 255, 184, 0)); // Bright Gold
+        mAnimBrandPaint.setShadowLayer(24.0f, 0f, 0f, Color.argb((int)(210 * alpha), 255, 184, 0));
+        float brandY = cy - 75f;
+        cvs.drawText(brand, cx, brandY, mAnimBrandPaint);
+        mAnimBrandPaint.clearShadowLayer();
+
+        // 3. Initializing Connection Subtitle
+        float subSize = Math.max(13.0f, brandSize * 0.36f);
+        mAnimSubPaint.setTextSize(subSize);
+        mAnimSubPaint.setColor(Color.argb((int)(240 * alpha), 0, 230, 118)); // Cyber Emerald Green
+        mAnimSubPaint.setShadowLayer(14.0f, 0f, 0f, Color.argb((int)(160 * alpha), 0, 230, 118));
+        float subY = brandY + (subSize * 2.2f);
+        cvs.drawText("INITIALIZING CONNECTION...", cx, subY, mAnimSubPaint);
+        mAnimSubPaint.clearShadowLayer();
+
+        // 4. Dynamic Cycling Feature Activation Text
+        String featureText;
+        if (isDone || progress >= 1.0f) {
+            featureText = "✨ All Systems Synchronized & Active";
+        } else if (progress < 0.25f) {
+            featureText = "⚡ Activating Auto ESP...";
+        } else if (progress < 0.50f) {
+            featureText = "🎯 Activating Line & Box ESP...";
+        } else if (progress < 0.75f) {
+            featureText = "⚡ Activating Aimbot & Headshot...";
+        } else {
+            featureText = "🛡️ Activating Bullet Track & Security...";
+        }
+
+        float featureSize = Math.max(12.5f, brandSize * 0.32f);
+        mAnimFeaturePaint.setTextSize(featureSize);
+        mAnimFeaturePaint.setColor(Color.argb((int)(230 * alpha), 226, 232, 240)); // Crisp Slate White
+        float featureY = subY + (featureSize * 2.4f);
+        cvs.drawText(featureText, cx, featureY, mAnimFeaturePaint);
+
+        if (!isDone && progress < 1.0f) {
+            // 5. Loading Bar & Percentage Counter (0% to 100% in 2 sec)
+            float barWidth = Math.min(320.0f, width * 0.65f);
+            float barHeight = 8.0f;
+            float barLeft = cx - (barWidth / 2.0f);
+            float barTop = featureY + 28.0f;
+            float barRight = cx + (barWidth / 2.0f);
+            float barBottom = barTop + barHeight;
+
+            // Track background
+            mAnimProgressBgPaint.setColor(Color.argb((int)(180 * alpha), 26, 26, 36));
+            android.graphics.RectF trackRect = new android.graphics.RectF(barLeft, barTop, barRight, barBottom);
+            cvs.drawRoundRect(trackRect, 4.0f, 4.0f, mAnimProgressBgPaint);
+
+            // Track border
+            Paint trackBorder = new Paint(Paint.ANTI_ALIAS_FLAG);
+            trackBorder.setStyle(Paint.Style.STROKE);
+            trackBorder.setStrokeWidth(1.0f);
+            trackBorder.setColor(Color.argb((int)(100 * alpha), 60, 60, 80));
+            cvs.drawRoundRect(trackRect, 4.0f, 4.0f, trackBorder);
+
+            // Fill
+            float clampedProgress = Math.max(0.02f, Math.min(1.0f, progress));
+            float fillRight = barLeft + (barWidth * clampedProgress);
+            android.graphics.RectF fillRect = new android.graphics.RectF(barLeft, barTop, fillRight, barBottom);
+
+            LinearGradient fillGrad = new LinearGradient(
+                    barLeft, barTop, barRight, barBottom,
+                    Color.argb((int)(255 * alpha), 255, 184, 0),
+                    Color.argb((int)(255 * alpha), 0, 230, 118),
+                    Shader.TileMode.CLAMP
+            );
+            mAnimProgressFillPaint.setShader(fillGrad);
+            mAnimProgressFillPaint.setShadowLayer(16.0f, 0f, 0f, Color.argb((int)(180 * alpha), 0, 230, 118));
+            cvs.drawRoundRect(fillRect, 4.0f, 4.0f, mAnimProgressFillPaint);
+            mAnimProgressFillPaint.clearShadowLayer();
+            mAnimProgressFillPaint.setShader(null);
+
+            // Percentage Text
+            int pct = (int) (clampedProgress * 100);
+            String pctStr = "[ " + pct + "% ]";
+            mAnimSubPaint.setTextSize(Math.max(13.0f, brandSize * 0.33f));
+            mAnimSubPaint.setColor(Color.argb((int)(255 * alpha), 255, 184, 0));
+            cvs.drawText(pctStr, cx, barBottom + 26.0f, mAnimSubPaint);
+        } else {
+            // 6. Completion State: Glowing Emerald Checkmark + "GOOD TO GO"
+            float checkCenterY = featureY + 45.0f;
+            float circleRadius = 26.0f;
+
+            // Glowing Green Background Circle
+            mAnimCheckCirclePaint.setColor(Color.argb((int)(240 * alpha), 0, 200, 83));
+            mAnimCheckCirclePaint.setShadowLayer(32.0f, 0f, 0f, Color.argb((int)(220 * alpha), 0, 230, 118));
+            cvs.drawCircle(cx, checkCenterY, circleRadius, mAnimCheckCirclePaint);
+            mAnimCheckCirclePaint.clearShadowLayer();
+
+            // Inner circle ring
+            Paint checkRing = new Paint(Paint.ANTI_ALIAS_FLAG);
+            checkRing.setStyle(Paint.Style.STROKE);
+            checkRing.setStrokeWidth(2.0f);
+            checkRing.setColor(Color.argb((int)(255 * alpha), 255, 255, 255));
+            cvs.drawCircle(cx, checkCenterY, circleRadius, checkRing);
+
+            // Checkmark Vector Path (✓)
+            android.graphics.Path checkPath = new android.graphics.Path();
+            checkPath.moveTo(cx - 11.0f, checkCenterY + 1.0f);
+            checkPath.lineTo(cx - 3.0f, checkCenterY + 9.0f);
+            checkPath.lineTo(cx + 12.0f, checkCenterY - 7.0f);
+
+            mAnimCheckPaint.setStrokeWidth(4.5f);
+            mAnimCheckPaint.setColor(Color.argb((int)(255 * alpha), 255, 255, 255));
+            mAnimCheckPaint.setShadowLayer(10.0f, 0f, 0f, Color.argb((int)(200 * alpha), 0, 0, 0));
+            cvs.drawPath(checkPath, mAnimCheckPaint);
+            mAnimCheckPaint.clearShadowLayer();
+
+            // "GOOD TO GO" Text
+            float goodToGoSize = Math.max(26.0f, brandSize * 0.65f);
+            mAnimBrandPaint.setTextSize(goodToGoSize);
+            mAnimBrandPaint.setColor(Color.argb((int)(255 * alpha), 0, 230, 118)); // Neon Green
+            mAnimBrandPaint.setShadowLayer(26.0f, 0f, 0f, Color.argb((int)(220 * alpha), 0, 230, 118));
+            float goodToGoY = checkCenterY + circleRadius + (goodToGoSize * 1.25f);
+            cvs.drawText("GOOD TO GO", cx, goodToGoY, mAnimBrandPaint);
+            mAnimBrandPaint.clearShadowLayer();
+
+            // Subtitle status below GOOD TO GO
+            mAnimFeaturePaint.setTextSize(Math.max(11.0f, brandSize * 0.28f));
+            mAnimFeaturePaint.setColor(Color.argb((int)(190 * alpha), 148, 163, 184));
+            cvs.drawText("ALL FEATURES ACTIVE & SECURE", cx, goodToGoY + 22.0f, mAnimFeaturePaint);
+        }
     }
 
     public void ClearCanvas(Canvas cvs) {

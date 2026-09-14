@@ -100,6 +100,19 @@ public:
         return;
     }
 
+    void DrawActivationLoading(const char *brandName, float progress, bool isDone, float alpha) {
+        if (isValid()) {
+            jstring jBrand = _env->NewStringUTF(brandName ? brandName : "ASHU PANEL");
+            _env->CallVoidMethod(_cvsView,
+                                 _env->GetMethodID(_env->GetObjectClass(_cvsView),
+                                                   "DrawActivationLoading",
+                                                   "(Landroid/graphics/Canvas;Ljava/lang/String;FZF)V"),
+                                 _cvs, jBrand, progress, (jboolean)isDone, alpha);
+            _env->DeleteLocalRef(jBrand);
+        }
+        return;
+    }
+
     void DrawTextLeft(Color color, const char *str, Vector2 pos, float size) {
         if (isValid()) {
             _env->CallVoidMethod(_cvsView,_env->GetMethodID(_env->GetObjectClass(_cvsView), "DrawTextLeft","(Landroid/graphics/Canvas;IIIIFLjava/lang/String;FFF)V"),_cvs, (int) color.a, (int) color.r, (int) color.g, (int) color.b,0.6f, _env->NewStringUTF(str), pos.X, pos.Y, size);

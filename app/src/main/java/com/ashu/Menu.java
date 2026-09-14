@@ -170,6 +170,11 @@ public class Menu {
         });
     }
 
+    public static String getBrandName() {
+        return (RemoteConfig.appName != null && !RemoteConfig.appName.isEmpty())
+                ? RemoteConfig.appName : "ASHU PANEL";
+    }
+
     // Criar Template - Modern Cyber Dark VIP Menu
     public void onCreateTemplate() {
         // Luxury Obsidian Glass Container with refined hairline border
@@ -187,10 +192,10 @@ public class Menu {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        // Main menu container - Compact sleek width (212dp down from 265dp)
+        // Main menu container - Compact sleek width (218dp)
         final LinearLayout container_menu = new LinearLayout(context);
         container_menu.setLayoutParams(new LinearLayout.LayoutParams(
-                utils.FixDP(212),
+                utils.FixDP(218),
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         container_menu.setVisibility(View.GONE);
         container_menu.setOrientation(LinearLayout.VERTICAL);
@@ -336,13 +341,13 @@ public class Menu {
                 ViewGroup.LayoutParams.MATCH_PARENT, utils.FixDP(0.8f)));
         headerDivider.setBackgroundColor(Color.parseColor("#22222B"));
 
-        // Center section where features will be displayed - Compact height (185dp)
+        // Center section where features will be displayed - Compact height (210dp)
         final LinearLayout container_center = new LinearLayout(context);
         container_center.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                utils.FixDP(185)));
+                utils.FixDP(210)));
         container_center.setGravity(Gravity.CENTER);
-        container_center.setPadding(utils.FixDP(5), utils.FixDP(3), utils.FixDP(5), utils.FixDP(3));
+        container_center.setPadding(utils.FixDP(6), utils.FixDP(3), utils.FixDP(6), utils.FixDP(3));
 
         // Scroll view for features
         scrollView_center = new ScrollView(context);
@@ -395,7 +400,7 @@ public class Menu {
         GradientDrawable gradientDrawable_inject_close = new GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 new int[]{Color.parseColor("#FFB800"), Color.parseColor("#E09600")});
-        gradientDrawable_inject_close.setCornerRadius(utils.FixDP(15));
+        gradientDrawable_inject_close.setCornerRadius(utils.FixDP(16));
         RippleDrawable rippleDrawable = new RippleDrawable(
                 ColorStateList.valueOf(0x33000000),
                 gradientDrawable_inject_close,
@@ -405,7 +410,7 @@ public class Menu {
         final Button inject_close = new Button(context);
         inject_close.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                utils.FixDP(30)));
+                utils.FixDP(32)));
         inject_close.setPadding(0, 0, 0, 0);
         inject_close.setText("INJECT");
         inject_close.setTextSize(11f);
@@ -646,29 +651,29 @@ public class Menu {
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        rowParams.setMargins(0, utils.FixDP(1.8f), 0, utils.FixDP(1.8f));
+        rowParams.setMargins(0, utils.FixDP(2.2f), 0, utils.FixDP(2.2f));
         rowCard.setLayoutParams(rowParams);
-        rowCard.setPadding(utils.FixDP(8), utils.FixDP(4f), utils.FixDP(6), utils.FixDP(4f));
+        rowCard.setPadding(utils.FixDP(10), utils.FixDP(5.5f), utils.FixDP(8), utils.FixDP(5.5f));
         rowCard.setOrientation(LinearLayout.HORIZONTAL);
         rowCard.setGravity(Gravity.CENTER_VERTICAL);
 
         GradientDrawable rowBg = new GradientDrawable();
         rowBg.setColor(Color.parseColor("#15151B"));
-        rowBg.setCornerRadius(utils.FixDP(6));
-        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#22222C"));
+        rowBg.setCornerRadius(utils.FixDP(8));
+        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#262634"));
         rowCard.setBackground(rowBg);
 
         final TextView textView = new TextView(context);
         textView.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         textView.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
         textView.setText(name);
-        textView.setTextSize(10.5f);
+        textView.setTextSize(11.5f);
         textView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
 
         final SwitchStyle switchStyle = new SwitchStyle(context);
-        switchStyle.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(30), utils.FixDP(16)));
+        switchStyle.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(38), utils.FixDP(21)));
 
-        final int colorOff = 0xFF7E7E8C;
+        final int colorOff = 0xFF8E8EA2;
         final int colorOn = 0xFFFFFFFF;
 
         textView.setTextColor(switchStyle.isChecked() ? colorOn : colorOff);
@@ -702,20 +707,20 @@ public class Menu {
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        rowParams.setMargins(0, utils.FixDP(1.8f), 0, utils.FixDP(1.8f));
+        rowParams.setMargins(0, utils.FixDP(2.2f), 0, utils.FixDP(2.2f));
         rowCard.setLayoutParams(rowParams);
-        rowCard.setPadding(utils.FixDP(8), utils.FixDP(4f), utils.FixDP(8), utils.FixDP(4f));
+        rowCard.setPadding(utils.FixDP(10), utils.FixDP(6f), utils.FixDP(10), utils.FixDP(6f));
         rowCard.setOrientation(LinearLayout.VERTICAL);
 
         GradientDrawable rowBg = new GradientDrawable();
         rowBg.setColor(Color.parseColor("#15151B"));
-        rowBg.setCornerRadius(utils.FixDP(6));
-        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#22222C"));
+        rowBg.setCornerRadius(utils.FixDP(8));
+        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#262634"));
         rowCard.setBackground(rowBg);
 
         final TextView textView = new TextView(context);
         textView.setText(name + ": " + value + type);
-        textView.setTextSize(9.5f);
+        textView.setTextSize(10.5f);
         textView.setTextColor(0xFFFFFFFF);
         textView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         if (type.equals("Color")) {

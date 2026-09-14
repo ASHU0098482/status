@@ -6,8 +6,8 @@ android {
         applicationId "com.ashu"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 85
-        versionName "85.0"
+        versionCode 86
+        versionName "86.0"
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a'
         }

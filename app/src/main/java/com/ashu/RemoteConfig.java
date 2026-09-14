@@ -26,11 +26,11 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 85;
+    public static int remoteVersionCode = 86;
     public static String updateUrl = "";
 
     public static boolean showWebsiteBanner = false;
-    public static String whatsappNumber = "";
+    public static String whatsappNumber = "+919135578874";
 
     // Remote customizable UI assets
     public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/jack_logo.png";

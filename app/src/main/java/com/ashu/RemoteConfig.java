@@ -49,7 +49,6 @@ public class RemoteConfig {
             
             // Query raw github with dynamic timestamp and random tokens to completely bypass caching
             String[] urlsToTry = new String[] {
-                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
                 CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
                 CONFIG_URL + "?v=" + System.currentTimeMillis() + "&b=" + (int)(Math.random() * 1000000),
                 CONFIG_URL

@@ -532,21 +532,100 @@ public class Login {
         actionRow.addView(supportBtn);
         card.addView(actionRow);
 
-        // --- 1.7b OBB 55 Panel Label ---
-        TextView obbLabel = new TextView(context);
-        obbLabel.setText("OBB 55 PANEL");
-        obbLabel.setTextColor(Color.parseColor("#FFB800"));
-        obbLabel.setTextSize(13.5f);
-        obbLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        obbLabel.setGravity(Gravity.CENTER);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            obbLabel.setLetterSpacing(0.12f);
-        }
+        // --- 1.7b OBB 55 Highlighted Showcase Badge ---
+        final LinearLayout obbBadge = new LinearLayout(context);
+        obbBadge.setOrientation(LinearLayout.VERTICAL);
+        obbBadge.setGravity(Gravity.CENTER);
+
+        // Deep cyber luxury background with glowing neon gold border
+        GradientDrawable obbBadgeBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[] {
+                        Color.parseColor("#2B1E05"),
+                        Color.parseColor("#3D2A07"),
+                        Color.parseColor("#2B1E05")
+                }
+        );
+        obbBadgeBg.setCornerRadius(utils.FixDP(14));
+        obbBadgeBg.setStroke(utils.FixDP(1.5f), Color.parseColor("#FFB800"));
+        obbBadge.setBackground(obbBadgeBg);
+        obbBadge.setPadding(utils.FixDP(14), utils.FixDP(8), utils.FixDP(14), utils.FixDP(8));
+
         LinearLayout.LayoutParams obbParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        obbParams.setMargins(0, utils.FixDP(4), 0, utils.FixDP(6));
-        obbLabel.setLayoutParams(obbParams);
-        card.addView(obbLabel);
+        obbParams.setMargins(0, utils.FixDP(4), 0, utils.FixDP(8));
+        obbBadge.setLayoutParams(obbParams);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            obbBadge.setElevation(utils.FixDP(4));
+        }
+
+        // Header Row: [🔥 NEW TAG] + "OBB 55 PANEL"
+        LinearLayout obbHeaderRow = new LinearLayout(context);
+        obbHeaderRow.setOrientation(LinearLayout.HORIZONTAL);
+        obbHeaderRow.setGravity(Gravity.CENTER);
+
+        // High-impact Fire "NEW" Tag
+        TextView newTag = new TextView(context);
+        newTag.setText("🔥 NEW");
+        newTag.setTextColor(Color.WHITE);
+        newTag.setTextSize(9.5f);
+        newTag.setTypeface(Typeface.DEFAULT_BOLD);
+        GradientDrawable newTagBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[] { Color.parseColor("#FF416C"), Color.parseColor("#FF4B2B") }
+        );
+        newTagBg.setCornerRadius(utils.FixDP(6));
+        newTag.setBackground(newTagBg);
+        newTag.setPadding(utils.FixDP(7), utils.FixDP(2), utils.FixDP(7), utils.FixDP(2));
+        LinearLayout.LayoutParams newTagParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        newTagParams.setMargins(0, 0, utils.FixDP(8), 0);
+        newTag.setLayoutParams(newTagParams);
+        obbHeaderRow.addView(newTag);
+
+        // Main Showcase Title
+        TextView obbTitle = new TextView(context);
+        obbTitle.setText("OBB 55 PANEL");
+        obbTitle.setTextColor(Color.parseColor("#FFD700"));
+        obbTitle.setTextSize(15f);
+        obbTitle.setTypeface(customGamingFont != null ? customGamingFont : Typeface.DEFAULT_BOLD);
+        obbTitle.setShadowLayer(16, 0, 0, Color.parseColor("#FFFFB800"));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            obbTitle.setLetterSpacing(0.12f);
+        }
+        obbHeaderRow.addView(obbTitle);
+        obbBadge.addView(obbHeaderRow);
+
+        // Subtitle Status: ⚡ LATEST UPDATE • 100% SAFE & ACTIVE 🟢
+        TextView obbSub = new TextView(context);
+        obbSub.setText("⚡ LATEST UPDATE • 100% SAFE & ACTIVE 🟢");
+        obbSub.setTextColor(Color.parseColor("#00FFA3"));
+        obbSub.setTextSize(10f);
+        obbSub.setTypeface(Typeface.DEFAULT_BOLD);
+        obbSub.setGravity(Gravity.CENTER);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            obbSub.setLetterSpacing(0.06f);
+        }
+        LinearLayout.LayoutParams obbSubParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        obbSubParams.setMargins(0, utils.FixDP(4), 0, 0);
+        obbSub.setLayoutParams(obbSubParams);
+        obbBadge.addView(obbSub);
+
+        // Continuous breathing scale animation to draw attention
+        ValueAnimator obbAnim = ValueAnimator.ofFloat(0.98f, 1.02f);
+        obbAnim.setDuration(1300);
+        obbAnim.setRepeatMode(ValueAnimator.REVERSE);
+        obbAnim.setRepeatCount(ValueAnimator.INFINITE);
+        obbAnim.addUpdateListener(anim -> {
+            float s = (float) anim.getAnimatedValue();
+            obbBadge.setScaleX(s);
+            obbBadge.setScaleY(s);
+        });
+        obbAnim.start();
+
+        card.addView(obbBadge);
 
         // --- 1.8 Loading / Verifying Indicator Container ---
         LinearLayout loadingLayout = new LinearLayout(context);

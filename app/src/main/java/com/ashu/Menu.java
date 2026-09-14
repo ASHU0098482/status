@@ -172,10 +172,11 @@ public class Menu {
 
     // Criar Template - Modern Cyber Dark VIP Menu
     public void onCreateTemplate() {
+        // Luxury Obsidian Glass Container with refined hairline border
         GradientDrawable gradientDrawable_container = new GradientDrawable();
-        gradientDrawable_container.setColor(Color.parseColor("#F2161616")); // Dark frosted glass
-        gradientDrawable_container.setCornerRadius(utils.FixDP(16));
-        gradientDrawable_container.setStroke(utils.FixDP(1.8f), PrimaryColor); // Golden Neon Accent Border
+        gradientDrawable_container.setColor(Color.parseColor("#EE101014")); // Ultra deep luxury dark glass (93% opacity)
+        gradientDrawable_container.setCornerRadius(utils.FixDP(14));
+        gradientDrawable_container.setStroke(utils.FixDP(1.0f), Color.parseColor("#383842")); // Elegant subtle border
 
         LinearLayout container = new LinearLayout(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -186,23 +187,23 @@ public class Menu {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        // Main menu container - Sleek width
+        // Main menu container - Compact sleek width (212dp down from 265dp)
         final LinearLayout container_menu = new LinearLayout(context);
         container_menu.setLayoutParams(new LinearLayout.LayoutParams(
-                utils.FixDP(265),
+                utils.FixDP(212),
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         container_menu.setVisibility(View.GONE);
         container_menu.setOrientation(LinearLayout.VERTICAL);
         container_menu.setBackground(gradientDrawable_container);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            container_menu.setElevation(utils.FixDP(12));
+            container_menu.setElevation(utils.FixDP(14));
         }
 
-        // Floating icon
+        // Floating icon - Compact & sleek (46dp down from 60dp)
         final ImageBase64 icon_cheat = new ImageBase64(context);
         icon_cheat.setLayoutParams(new LinearLayout.LayoutParams(
-                utils.FixDP(60),
-                utils.FixDP(60)));
+                utils.FixDP(46),
+                utils.FixDP(46)));
         android.graphics.drawable.Drawable placeholderDrawable = null;
         try {
             byte[] decodeImageBase64 = android.util.Base64.decode(imageBase64(), android.util.Base64.DEFAULT);
@@ -244,9 +245,10 @@ public class Menu {
         }
         GradientDrawable iconBackground = new GradientDrawable();
         iconBackground.setShape(GradientDrawable.OVAL);
-        iconBackground.setColor(Color.TRANSPARENT);
+        iconBackground.setColor(Color.parseColor("#DD111114"));
+        iconBackground.setStroke(utils.FixDP(1.2f), Color.parseColor("#88FFB800"));
         icon_cheat.setBackground(iconBackground);
-        icon_cheat.setPadding(utils.FixDP(5), utils.FixDP(5), utils.FixDP(5), utils.FixDP(5));
+        icon_cheat.setPadding(utils.FixDP(4), utils.FixDP(4), utils.FixDP(4), utils.FixDP(4));
         icon_cheat.setOnTouchListener(onTouchListener());
         icon_cheat.setOnClickListener(view -> {
             icon_cheat.setVisibility(View.GONE);
@@ -258,24 +260,24 @@ public class Menu {
             }
         });
 
-        // Top section of the menu with Header branding
+        // Top section of the menu with refined header
         LinearLayout container_top = new LinearLayout(context);
         container_top.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         container_top.setPadding(
-                utils.FixDP(12),
                 utils.FixDP(10),
-                utils.FixDP(12),
-                utils.FixDP(8));
+                utils.FixDP(7),
+                utils.FixDP(10),
+                utils.FixDP(6));
         container_top.setGravity(Gravity.CENTER_VERTICAL);
         container_top.setOrientation(LinearLayout.HORIZONTAL);
 
-        // Menu icon in top bar
+        // Menu icon in top bar - Compact (26x26)
         ImageBase64 icon_menu = new ImageBase64(context);
         icon_menu.setLayoutParams(new LinearLayout.LayoutParams(
-                utils.FixDP(36),
-                utils.FixDP(36)));
+                utils.FixDP(26),
+                utils.FixDP(26)));
         if (placeholderDrawable != null) {
             icon_menu.setImageDrawable(placeholderDrawable);
         }
@@ -292,55 +294,55 @@ public class Menu {
         titleCol.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams titleColParams = new LinearLayout.LayoutParams(
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
-        titleColParams.setMargins(utils.FixDP(8), 0, 0, 0);
+        titleColParams.setMargins(utils.FixDP(7), 0, 0, 0);
         titleCol.setLayoutParams(titleColParams);
 
         TextView menuTitle = new TextView(context);
         String appDisplayName = (RemoteConfig.appName != null && !RemoteConfig.appName.isEmpty())
                 ? RemoteConfig.appName : "ASHU PANEL";
         menuTitle.setText(appDisplayName);
-        menuTitle.setTextSize(13.5f);
+        menuTitle.setTextSize(11.5f);
         menuTitle.setTextColor(PrimaryColor);
         menuTitle.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         titleCol.addView(menuTitle);
 
         TextView menuSub = new TextView(context);
         menuSub.setText("VIP AIMBOT & ESP");
-        menuSub.setTextSize(9f);
-        menuSub.setTextColor(Color.parseColor("#94A3B8"));
+        menuSub.setTextSize(7.5f);
+        menuSub.setTextColor(Color.parseColor("#8E8EA0"));
         menuSub.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         titleCol.addView(menuSub);
 
-        // Live badge on top-right
+        // Live badge on top-right - Sleek mini badge
         TextView liveBadge = new TextView(context);
         liveBadge.setText("● LIVE");
-        liveBadge.setTextSize(8.5f);
+        liveBadge.setTextSize(7.5f);
         liveBadge.setTextColor(Color.parseColor("#00E676"));
         liveBadge.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        liveBadge.setPadding(utils.FixDP(6), utils.FixDP(2), utils.FixDP(6), utils.FixDP(2));
+        liveBadge.setPadding(utils.FixDP(5), utils.FixDP(1.5f), utils.FixDP(5), utils.FixDP(1.5f));
         GradientDrawable liveBadgeBg = new GradientDrawable();
-        liveBadgeBg.setColor(Color.parseColor("#153322"));
-        liveBadgeBg.setCornerRadius(utils.FixDP(6));
-        liveBadgeBg.setStroke(utils.FixDP(1), Color.parseColor("#00E676"));
+        liveBadgeBg.setColor(Color.parseColor("#0C2417"));
+        liveBadgeBg.setCornerRadius(utils.FixDP(5));
+        liveBadgeBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#00E676"));
         liveBadge.setBackground(liveBadgeBg);
 
         container_top.addView(icon_menu);
         container_top.addView(titleCol);
         container_top.addView(liveBadge);
 
-        // Glowing divider line
+        // Glowing divider line - Hairline
         View headerDivider = new View(context);
         headerDivider.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, utils.FixDP(1)));
-        headerDivider.setBackgroundColor(Color.parseColor("#2E2E2E"));
+                ViewGroup.LayoutParams.MATCH_PARENT, utils.FixDP(0.8f)));
+        headerDivider.setBackgroundColor(Color.parseColor("#22222B"));
 
-        // Center section where features will be displayed
+        // Center section where features will be displayed - Compact height (185dp)
         final LinearLayout container_center = new LinearLayout(context);
         container_center.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                utils.FixDP(230)));
+                utils.FixDP(185)));
         container_center.setGravity(Gravity.CENTER);
-        container_center.setPadding(utils.FixDP(6), utils.FixDP(4), utils.FixDP(6), utils.FixDP(4));
+        container_center.setPadding(utils.FixDP(5), utils.FixDP(3), utils.FixDP(5), utils.FixDP(3));
 
         // Scroll view for features
         scrollView_center = new ScrollView(context);
@@ -348,7 +350,7 @@ public class Menu {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         scrollView_center.setVerticalScrollBarEnabled(false);
-        scrollView_center.setPadding(0, utils.FixDP(2), 0, utils.FixDP(2));
+        scrollView_center.setPadding(0, utils.FixDP(1), 0, utils.FixDP(1));
 
         // Container for all feature tabs
         featuresScrollContainer = new LinearLayout(context);
@@ -362,39 +364,40 @@ public class Menu {
         // Progress bar
         final ProgressBar progressBar = new ProgressBar(context);
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(
-                utils.FixDP(50),
-                utils.FixDP(50)));
+                utils.FixDP(36),
+                utils.FixDP(36)));
         progressBar.getIndeterminateDrawable().setColorFilter(PrimaryColor, PorterDuff.Mode.SRC_IN);
 
-        // Bottom section with status banner and close button
+        // Bottom section with status banner and close button - Compact
         LinearLayout container_bottom = new LinearLayout(context);
         container_bottom.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         container_bottom.setPadding(
-                utils.FixDP(10),
-                utils.FixDP(4),
-                utils.FixDP(10),
-                utils.FixDP(10));
+                utils.FixDP(8),
+                utils.FixDP(2),
+                utils.FixDP(8),
+                utils.FixDP(8));
         container_bottom.setOrientation(LinearLayout.VERTICAL);
         container_bottom.setGravity(Gravity.CENTER);
 
         // Active Status Chip
         statusBannerView = new TextView(context);
         statusBannerView.setText("⚡ SYSTEM: READY");
-        statusBannerView.setTextSize(10f);
-        statusBannerView.setTextColor(Color.parseColor("#94A3B8"));
+        statusBannerView.setTextSize(8.5f);
+        statusBannerView.setTextColor(Color.parseColor("#8E8EA0"));
         statusBannerView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         statusBannerView.setGravity(Gravity.CENTER);
-        statusBannerView.setPadding(0, 0, 0, utils.FixDP(6));
+        statusBannerView.setPadding(0, 0, 0, utils.FixDP(3));
         container_bottom.addView(statusBannerView);
 
-        // Button styling - Golden Pill Button
-        GradientDrawable gradientDrawable_inject_close = new GradientDrawable();
-        gradientDrawable_inject_close.setColor(PrimaryColor);
-        gradientDrawable_inject_close.setCornerRadius(utils.FixDP(25));
+        // Button styling - Compact Golden Gradient Pill Button
+        GradientDrawable gradientDrawable_inject_close = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{Color.parseColor("#FFB800"), Color.parseColor("#E09600")});
+        gradientDrawable_inject_close.setCornerRadius(utils.FixDP(15));
         RippleDrawable rippleDrawable = new RippleDrawable(
-                ColorStateList.valueOf(0xFF444444),
+                ColorStateList.valueOf(0x33000000),
                 gradientDrawable_inject_close,
                 null);
 
@@ -402,11 +405,11 @@ public class Menu {
         final Button inject_close = new Button(context);
         inject_close.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                utils.FixDP(38)));
+                utils.FixDP(30)));
         inject_close.setPadding(0, 0, 0, 0);
         inject_close.setText("INJECT");
-        inject_close.setTextSize(13);
-        inject_close.setTextColor(0xFFFFFFFF);
+        inject_close.setTextSize(11f);
+        inject_close.setTextColor(0xFF000000); // Crisp dark contrast on gold
         inject_close.setBackground(rippleDrawable);
         inject_close.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
 
@@ -569,13 +572,13 @@ public class Menu {
             tabsContainer.addView(tabButton);
         }
 
-        // Create content for this tab
+        // Create content for this tab - Compact padding
         LinearLayout tabContent = new LinearLayout(context);
         tabContent.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         tabContent.setOrientation(LinearLayout.VERTICAL);
-        tabContent.setPadding(utils.FixDP(10), utils.FixDP(5), utils.FixDP(10), utils.FixDP(5));
+        tabContent.setPadding(utils.FixDP(6), utils.FixDP(2), utils.FixDP(6), utils.FixDP(2));
         tabContent.setVisibility(isFirstTab ? View.VISIBLE : View.GONE);
 
         // Store & add it
@@ -603,34 +606,31 @@ public class Menu {
     /**
      * Add a category heading within the current tab
      */
-    /**
-     * Add a category heading within the current tab
-     */
     public static void addCategory(String name) {
         if (currentTab.isEmpty() || !tabContentContainers.containsKey(currentTab)) {
             return; // No tab selected
         }
 
         GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setColor(Color.parseColor("#221A0F")); // Amber tinted dark badge
-        gradientDrawable.setCornerRadius(utils.FixDP(6));
-        gradientDrawable.setStroke(utils.FixDP(1), PrimaryColor);
+        gradientDrawable.setColor(Color.parseColor("#18140E")); // Subtle amber tinted cyber pill
+        gradientDrawable.setCornerRadius(utils.FixDP(5));
+        gradientDrawable.setStroke(utils.FixDP(0.8f), Color.parseColor("#33FFB800"));
 
         LinearLayout linearLayout = new LinearLayout(context);
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                utils.FixDP(26)));
+                utils.FixDP(20)));
         linearLayout.setBackground(gradientDrawable);
         linearLayout.setGravity(Gravity.CENTER_VERTICAL);
-        linearLayout.setPadding(utils.FixDP(10), 0, utils.FixDP(10), 0);
+        linearLayout.setPadding(utils.FixDP(7), 0, utils.FixDP(7), 0);
 
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) linearLayout.getLayoutParams();
-        params.setMargins(0, utils.FixDP(8), 0, utils.FixDP(4));
+        params.setMargins(0, utils.FixDP(5), 0, utils.FixDP(2.5f));
         linearLayout.setLayoutParams(params);
 
         TextView textView = new TextView(context);
-        textView.setText("🎯  " + name.toUpperCase());
-        textView.setTextSize(10.5f);
+        textView.setText("⚡  " + name.toUpperCase());
+        textView.setTextSize(9f);
         textView.setTextColor(PrimaryColor);
         textView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
 
@@ -639,36 +639,36 @@ public class Menu {
     }
 
     /**
-     * Add a switch to the current tab
+     * Add a switch to the current tab - Compact row
      */
     public static void addSwitch(String name, final int ID) {
         LinearLayout rowCard = new LinearLayout(context);
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        rowParams.setMargins(0, utils.FixDP(2.5f), 0, utils.FixDP(2.5f));
+        rowParams.setMargins(0, utils.FixDP(1.8f), 0, utils.FixDP(1.8f));
         rowCard.setLayoutParams(rowParams);
-        rowCard.setPadding(utils.FixDP(10), utils.FixDP(6), utils.FixDP(8), utils.FixDP(6));
+        rowCard.setPadding(utils.FixDP(8), utils.FixDP(4f), utils.FixDP(6), utils.FixDP(4f));
         rowCard.setOrientation(LinearLayout.HORIZONTAL);
         rowCard.setGravity(Gravity.CENTER_VERTICAL);
 
         GradientDrawable rowBg = new GradientDrawable();
-        rowBg.setColor(Color.parseColor("#1C1C1C"));
-        rowBg.setCornerRadius(utils.FixDP(8));
-        rowBg.setStroke(utils.FixDP(1), Color.parseColor("#2C2C2C"));
+        rowBg.setColor(Color.parseColor("#15151B"));
+        rowBg.setCornerRadius(utils.FixDP(6));
+        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#22222C"));
         rowCard.setBackground(rowBg);
 
         final TextView textView = new TextView(context);
         textView.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         textView.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
         textView.setText(name);
-        textView.setTextSize(11.5f);
+        textView.setTextSize(10.5f);
         textView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
 
         final SwitchStyle switchStyle = new SwitchStyle(context);
-        switchStyle.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(38), utils.FixDP(20)));
+        switchStyle.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(30), utils.FixDP(16)));
 
-        final int colorOff = 0xFF888888;
+        final int colorOff = 0xFF7E7E8C;
         final int colorOn = 0xFFFFFFFF;
 
         textView.setTextColor(switchStyle.isChecked() ? colorOn : colorOff);
@@ -702,20 +702,20 @@ public class Menu {
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        rowParams.setMargins(0, utils.FixDP(2.5f), 0, utils.FixDP(2.5f));
+        rowParams.setMargins(0, utils.FixDP(1.8f), 0, utils.FixDP(1.8f));
         rowCard.setLayoutParams(rowParams);
-        rowCard.setPadding(utils.FixDP(10), utils.FixDP(6), utils.FixDP(10), utils.FixDP(6));
+        rowCard.setPadding(utils.FixDP(8), utils.FixDP(4f), utils.FixDP(8), utils.FixDP(4f));
         rowCard.setOrientation(LinearLayout.VERTICAL);
 
         GradientDrawable rowBg = new GradientDrawable();
-        rowBg.setColor(Color.parseColor("#1C1C1C"));
-        rowBg.setCornerRadius(utils.FixDP(8));
-        rowBg.setStroke(utils.FixDP(1), Color.parseColor("#2C2C2C"));
+        rowBg.setColor(Color.parseColor("#15151B"));
+        rowBg.setCornerRadius(utils.FixDP(6));
+        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#22222C"));
         rowCard.setBackground(rowBg);
 
         final TextView textView = new TextView(context);
         textView.setText(name + ": " + value + type);
-        textView.setTextSize(11f);
+        textView.setTextSize(9.5f);
         textView.setTextColor(0xFFFFFFFF);
         textView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         if (type.equals("Color")) {

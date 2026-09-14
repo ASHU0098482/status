@@ -24,18 +24,18 @@ public class MainActivity extends Activity {
     private static final int OVERLAY_PERMISSION_REQUEST_CODE = 100;
     private static final int STORAGE_PERMISSION_REQUEST_CODE = 101;
     private static final int INSTALL_UNKNOWN_APPS_REQUEST_CODE = 102;
-    private java.io.File pendingInstallApkFile = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = this;
 
-        try {
-            Runtime.getRuntime().exec("su");
-        } catch (Exception e) {
-            // Root not found - handled silently
-        }
+        // Schedule periodic background update check via WorkManager
+        com.ashu.updater.UpdateCheckWorker.schedulePeriodicWork(this);
+
+        // Prompt for unknown apps permission once if needed, then trigger immediate background update check
+        com.ashu.updater.UpdateManager.getInstance(this).promptInstallUnknownAppsOnce(this, INSTALL_UNKNOWN_APPS_REQUEST_CODE);
+        com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(true);
 
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
@@ -61,18 +61,6 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                int localVersion = 1;
-                try {
-                    localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                if (RemoteConfig.remoteVersionCode > localVersion) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
-                    return;
-                }
-
                 if (RemoteConfig.showNotice && RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) {
                     showNoticeDialog(RemoteConfig.noticeTitle, RemoteConfig.noticeMessage, () -> showFirstSplash());
                 } else {
@@ -83,27 +71,8 @@ public class MainActivity extends Activity {
     }
 
     public void showUpdateDialog(final String updateUrl) {
-        final String validUpdateUrl = (updateUrl != null && !updateUrl.isEmpty())
-            ? updateUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/ASHU_PANEL.apk";
-        String msg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) 
-            ? RemoteConfig.noticeMessage + "\n\nTap 'UPDATE NOW' to download and install from GitHub."
-            : "A new update is available on GitHub. Tap 'UPDATE NOW' to download and install.";
-        String title = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
-            ? RemoteConfig.noticeTitle : "🔄 Update Available!";
-        new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle(title)
-            .setMessage(msg)
-            .setCancelable(false)
-            .setPositiveButton("UPDATE NOW", (d, which) -> {
-                d.dismiss();
-                downloadAndInstallApk(validUpdateUrl);
-            })
-            .setNegativeButton("EXIT", (d, which) -> {
-                d.dismiss();
-                finishAffinity();
-            })
-            .create()
-            .show();
+        // Trigger background silent update directly without intrusive dialogs
+        com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(true);
     }
 
     private void showNoticeDialog(String title, String message, Runnable onContinue) {
@@ -135,214 +104,11 @@ public class MainActivity extends Activity {
     }
 
     public void checkForUpdates(final boolean showToastIfUpToDate) {
-        RemoteConfig.fetchConfig(() -> {
-            runOnUiThread(() -> {
-                int localVersion = 1;
-                try {
-                    localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                if (RemoteConfig.remoteVersionCode > localVersion) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
-                } else if (showToastIfUpToDate) {
-                    showUpdateDialog(RemoteConfig.updateUrl);
-                }
-            });
-        });
-    }
-
-    public void showUpdateFailedDialog(final String apkUrl) {
-        new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("❌ Update Failed")
-            .setMessage("Failed to download the update. Please check your internet connection.")
-            .setCancelable(false)
-            .setPositiveButton("RETRY", (d, which) -> {
-                downloadAndInstallApk(apkUrl);
-            })
-            .setNegativeButton("EXIT", (d, which) -> {
-                finishAffinity();
-            })
-            .create()
-            .show();
+        com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(!showToastIfUpToDate);
     }
 
     public void downloadAndInstallApk(final String apkUrl) {
-        final String downloadUrl = (apkUrl != null && !apkUrl.isEmpty())
-            ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/ASHU_PANEL.apk";
-        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
-        String dialogTitle = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
-            ? RemoteConfig.noticeTitle : "🔄 Auto Updating APK...";
-        String dialogMsg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty())
-            ? RemoteConfig.noticeMessage
-            : "Downloading the latest version automatically. Please wait...";
-        progressDialog.setTitle(dialogTitle);
-        progressDialog.setMessage(dialogMsg);
-        progressDialog.setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setCancelable(false);
-        progressDialog.setIndeterminate(false);
-        progressDialog.setButton(android.content.DialogInterface.BUTTON_NEGATIVE, "EXIT", (d, which) -> {
-            finishAffinity();
-        });
-        progressDialog.show();
-
-        new Thread(() -> {
-            try {
-                java.io.File updatesDir = new java.io.File(getExternalFilesDir(null), "updates");
-                if (!updatesDir.exists()) updatesDir.mkdirs();
-                java.io.File apkFile = new java.io.File(updatesDir, "ASHU_PANEL_update.apk");
-                if (apkFile.exists()) apkFile.delete();
-
-                String currentUrl = downloadUrl;
-                if (currentUrl.contains("?")) {
-                    currentUrl += "&t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000);
-                } else {
-                    currentUrl += "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 100000);
-                }
-
-                java.net.HttpURLConnection conn = null;
-                int redirects = 0;
-                while (redirects < 10) {
-                    java.net.URL url = new java.net.URL(currentUrl);
-                    conn = (java.net.HttpURLConnection) url.openConnection();
-                    conn.setUseCaches(false);
-                    conn.setDefaultUseCaches(false);
-                    conn.setInstanceFollowRedirects(true);
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(15000);
-                    conn.setReadTimeout(15000);
-                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
-                    conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
-                    conn.setRequestProperty("Pragma", "no-cache");
-                    conn.setRequestProperty("Accept", "*/*");
-
-                    int status = conn.getResponseCode();
-                    if (status == java.net.HttpURLConnection.HTTP_MOVED_TEMP
-                            || status == java.net.HttpURLConnection.HTTP_MOVED_PERM
-                            || status == java.net.HttpURLConnection.HTTP_SEE_OTHER
-                            || status == 307 || status == 308) {
-                        String newUrl = conn.getHeaderField("Location");
-                        if (newUrl != null && !newUrl.isEmpty()) {
-                            currentUrl = newUrl;
-                            redirects++;
-                            conn.disconnect();
-                            continue;
-                        }
-                    }
-                    break;
-                }
-
-                int fileLength = conn.getContentLength();
-                java.io.InputStream input = conn.getInputStream();
-                java.io.FileOutputStream output = new java.io.FileOutputStream(apkFile);
-
-                byte[] buffer = new byte[4096];
-                long total = 0;
-                int count;
-                while ((count = input.read(buffer)) != -1) {
-                    total += count;
-                    if (fileLength > 0) {
-                        final int progress = (int) (total * 100 / fileLength);
-                        runOnUiThread(() -> progressDialog.setProgress(progress));
-                    }
-                    output.write(buffer, 0, count);
-                }
-                output.flush();
-                output.close();
-                input.close();
-                conn.disconnect();
-
-                runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    installApk(apkFile);
-                });
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    progressDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "Update failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    showUpdateFailedDialog(apkUrl); // Show retry dialog if download fails
-                });
-            }
-        }).start();
-    }
-
-    private void installApk(final java.io.File apkFile) {
-        if (apkFile == null || !apkFile.exists()) {
-            Toast.makeText(this, "Update file not found.", Toast.LENGTH_SHORT).show();
-            showFirstSplash();
-            return;
-        }
-
-        try {
-            apkFile.setReadable(true, false);
-        } catch (Exception ignored) {}
-
-        // 1. Try silent root install if root is available
-        try {
-            Process process = Runtime.getRuntime().exec("su");
-            java.io.OutputStream os = process.getOutputStream();
-            os.write(("cp " + apkFile.getAbsolutePath() + " /data/local/tmp/update.apk\n").getBytes());
-            os.write(("chmod 777 /data/local/tmp/update.apk\n").getBytes());
-            os.write(("chcon u:object_r:shell_data_file:s0 /data/local/tmp/update.apk 2>/dev/null\n").getBytes());
-            os.write(("pm install -r -d -g /data/local/tmp/update.apk || pm install -r -d -g --user 0 /data/local/tmp/update.apk\n").getBytes());
-            os.write(("rm /data/local/tmp/update.apk\n").getBytes());
-            os.write("exit\n".getBytes());
-            os.flush();
-            int result = process.waitFor();
-            if (result == 0) {
-                // Silent install succeeded!
-                android.os.Process.killProcess(android.os.Process.myPid());
-                System.exit(0);
-                return;
-            }
-        } catch (Exception ignored) {
-        }
-
-        // 2. Non-root install flow
-        pendingInstallApkFile = apkFile;
-
-        // Check Unknown App Install permission on Android 8.0+ for non-root installer
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!getPackageManager().canRequestPackageInstalls()) {
-                Toast.makeText(this, "Please allow 'Install Unknown Apps' permission to complete update", Toast.LENGTH_LONG).show();
-                try {
-                    Intent permIntent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(permIntent, INSTALL_UNKNOWN_APPS_REQUEST_CODE);
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        // Launch standard package installer
-        launchPackageInstaller(apkFile);
-    }
-
-    private void launchPackageInstaller(java.io.File apkFile) {
-        if (apkFile == null || !apkFile.exists()) return;
-        try {
-            apkFile.setReadable(true, false);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            android.net.Uri apkUri;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                apkUri = androidx.core.content.FileProvider.getUriForFile(
-                    this, getPackageName() + ".provider", apkFile);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-            } else {
-                apkUri = android.net.Uri.fromFile(apkFile);
-            }
-            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Exception e) {
-            Toast.makeText(this, "Install failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            showFirstSplash();
-        }
+        com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(false);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -570,8 +336,8 @@ public class MainActivity extends Activity {
                 startLogin();
             }
         } else if (requestCode == INSTALL_UNKNOWN_APPS_REQUEST_CODE) {
-            if (pendingInstallApkFile != null && pendingInstallApkFile.exists()) {
-                launchPackageInstaller(pendingInstallApkFile);
+            if (com.ashu.updater.UpdateManager.getInstance(this).canRequestPackageInstalls()) {
+                com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(true);
             }
         }
     }

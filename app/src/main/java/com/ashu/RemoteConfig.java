@@ -28,6 +28,10 @@ public class RemoteConfig {
 
     public static int remoteVersionCode = 86;
     public static String updateUrl = "";
+    public static String sha256 = "";
+    public static String versionName = "";
+    public static boolean forceUpdate = false;
+    public static String releaseNotes = "";
 
     public static boolean showWebsiteBanner = false;
     public static String whatsappNumber = "+919135578874";
@@ -95,8 +99,12 @@ public class RemoteConfig {
                         keyauthVersion = json.optString("keyauth_version", "1.0");
                         keyauthUrl = json.optString("keyauth_url", "https://keyauth.win/api/1.3/");
                         
-                        remoteVersionCode = json.optInt("apk_version_code", 1);
-                        updateUrl = json.optString("apk_update_url", "");
+                        remoteVersionCode = json.optInt("versionCode", json.optInt("apk_version_code", 1));
+                        updateUrl = json.optString("apkUrl", json.optString("apk_update_url", ""));
+                        sha256 = json.optString("sha256", json.optString("apk_sha256", ""));
+                        versionName = json.optString("versionName", json.optString("apk_version_name", ""));
+                        forceUpdate = json.optBoolean("forceUpdate", json.optBoolean("force_update", false));
+                        releaseNotes = json.optString("releaseNotes", json.optString("release_notes", ""));
                         whatsappNumber = json.optString("whatsapp_number", "");
 
                         logoUrl = json.optString("logo_url", "");

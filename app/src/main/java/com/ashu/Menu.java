@@ -214,6 +214,7 @@ public class Menu {
 
         // Floating icon - Compact & sleek (46dp down from 60dp)
         final ImageBase64 icon_cheat = new ImageBase64(context);
+        floatingIconView = icon_cheat;
         icon_cheat.setLayoutParams(new LinearLayout.LayoutParams(
                 utils.FixDP(46),
                 utils.FixDP(46)));
@@ -332,15 +333,33 @@ public class Menu {
         liveBadge.setTextSize(7.5f);
         liveBadge.setTextColor(Color.parseColor("#00E676"));
         liveBadge.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-        liveBadge.setPadding(utils.FixDP(5), utils.FixDP(1.5f), utils.FixDP(5), utils.FixDP(1.5f));
+        liveBadge.setPadding(utils.FixDP(4.5f), utils.FixDP(1.5f), utils.FixDP(4.5f), utils.FixDP(1.5f));
         GradientDrawable liveBadgeBg = new GradientDrawable();
         liveBadgeBg.setColor(Color.parseColor("#0C2417"));
         liveBadgeBg.setCornerRadius(utils.FixDP(5));
         liveBadgeBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#00E676"));
         liveBadge.setBackground(liveBadgeBg);
 
+        // VIP badge
+        TextView vipBadge = new TextView(context);
+        vipBadge.setText("👑 VIP 30D");
+        vipBadge.setTextSize(7.5f);
+        vipBadge.setTextColor(Color.parseColor("#FFB800"));
+        vipBadge.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        vipBadge.setPadding(utils.FixDP(4.5f), utils.FixDP(1.5f), utils.FixDP(4.5f), utils.FixDP(1.5f));
+        GradientDrawable vipBadgeBg = new GradientDrawable();
+        vipBadgeBg.setColor(Color.parseColor("#251C05"));
+        vipBadgeBg.setCornerRadius(utils.FixDP(5));
+        vipBadgeBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#FFB800"));
+        vipBadge.setBackground(vipBadgeBg);
+        LinearLayout.LayoutParams vipBadgeParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        vipBadgeParams.setMargins(0, 0, utils.FixDP(3.5f), 0);
+        vipBadge.setLayoutParams(vipBadgeParams);
+
         container_top.addView(icon_menu);
         container_top.addView(titleCol);
+        container_top.addView(vipBadge);
         container_top.addView(liveBadge);
 
         // Glowing divider line - Hairline
@@ -656,7 +675,89 @@ public class Menu {
     private static final java.util.List<SwitchStyle> lockedSwitches = new java.util.ArrayList<>();
     private static final java.util.List<SeekBar> lockedSeekBars = new java.util.ArrayList<>();
 
+    public static ImageBase64 floatingIconView;
+    private static android.animation.ValueAnimator breathingAnimator;
+    public static boolean soundFxEnabled = true;
+
+    public static void vibrateClick() {
+        if (context == null) return;
+        try {
+            android.os.Vibrator v = (android.os.Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null && v.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(android.os.VibrationEffect.createOneShot(22, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+                } else {
+                    v.vibrate(22);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public static void vibrateWarning() {
+        if (context == null) return;
+        try {
+            android.os.Vibrator v = (android.os.Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null && v.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(android.os.VibrationEffect.createWaveform(new long[]{0, 35, 50, 45}, -1));
+                } else {
+                    v.vibrate(new long[]{0, 35, 50, 45}, -1);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public static void vibrateMasterActivate() {
+        if (context == null) return;
+        try {
+            android.os.Vibrator v = (android.os.Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null && v.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(android.os.VibrationEffect.createWaveform(new long[]{0, 50, 70, 75}, -1));
+                } else {
+                    v.vibrate(new long[]{0, 50, 70, 75}, -1);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public static void startBreathingAnimation() {
+        if (floatingIconView == null) return;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                if (breathingAnimator != null && breathingAnimator.isRunning()) return;
+                breathingAnimator = android.animation.ValueAnimator.ofFloat(1.0f, 1.15f);
+                breathingAnimator.setDuration(900);
+                breathingAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+                breathingAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+                breathingAnimator.addUpdateListener(anim -> {
+                    if (floatingIconView != null) {
+                        float s = (float) anim.getAnimatedValue();
+                        floatingIconView.setScaleX(s);
+                        floatingIconView.setScaleY(s);
+                    }
+                });
+                breathingAnimator.start();
+            } catch (Exception ignored) {}
+        });
+    }
+
+    public static void stopBreathingAnimation() {
+        if (floatingIconView == null) return;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                if (breathingAnimator != null) {
+                    breathingAnimator.cancel();
+                    breathingAnimator = null;
+                }
+                floatingIconView.setScaleX(1.0f);
+                floatingIconView.setScaleY(1.0f);
+            } catch (Exception ignored) {}
+        });
+    }
+
     public static void showLockedToast() {
+        vibrateWarning();
         if (context == null) return;
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
             try {
@@ -669,6 +770,11 @@ public class Menu {
 
     public static void setFeaturesLocked(boolean unlocked) {
         isMasterActive = unlocked;
+        if (unlocked) {
+            startBreathingAnimation();
+        } else {
+            stopBreathingAnimation();
+        }
         for (View v : lockedRowViews) {
             v.animate().alpha(unlocked ? 1.0f : 0.40f).setDuration(220).start();
         }
@@ -748,10 +854,18 @@ public class Menu {
                 return;
             }
 
+            vibrateClick();
+            if (ID == 990) {
+                soundFxEnabled = isChecked;
+            }
+
             ChangesID(ID, 0);
 
             if (isMasterSwitch) {
                 setFeaturesLocked(isChecked);
+                if (isChecked) {
+                    vibrateMasterActivate();
+                }
             }
 
             if (isChecked) {
@@ -905,6 +1019,7 @@ public class Menu {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+                vibrateClick();
             }
 
             @Override
@@ -934,6 +1049,238 @@ public class Menu {
         rowCard.addView(textView);
         rowCard.addView(seekBar);
         tabContentContainers.get(currentTab).addView(rowCard);
+    }
+
+    private static int currentFovColor = 0xFF00FFFF;
+
+    public static void addColorPicker(final String name, final int ID) {
+        LinearLayout rowCard = new LinearLayout(context);
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        rowParams.setMargins(0, utils.FixDP(2.2f), 0, utils.FixDP(2.2f));
+        rowCard.setLayoutParams(rowParams);
+        rowCard.setPadding(utils.FixDP(10), utils.FixDP(6f), utils.FixDP(10), utils.FixDP(6f));
+        rowCard.setOrientation(LinearLayout.VERTICAL);
+
+        GradientDrawable rowBg = new GradientDrawable();
+        rowBg.setColor(Color.parseColor("#15151B"));
+        rowBg.setCornerRadius(utils.FixDP(8));
+        rowBg.setStroke(utils.FixDP(0.8f), Color.parseColor("#262634"));
+        rowCard.setBackground(rowBg);
+
+        // Header Row: Title + Color Preview Swatch
+        LinearLayout topRow = new LinearLayout(context);
+        topRow.setOrientation(LinearLayout.HORIZONTAL);
+        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        topRow.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView titleView = new TextView(context);
+        titleView.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        titleView.setText("🎨 " + name);
+        titleView.setTextSize(10.5f);
+        titleView.setTextColor(0xFFFFFFFF);
+        titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+
+        final View previewSwatch = new View(context);
+        previewSwatch.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(34), utils.FixDP(16)));
+        final GradientDrawable swatchBg = new GradientDrawable();
+        swatchBg.setCornerRadius(utils.FixDP(8));
+        swatchBg.setColor(currentFovColor);
+        swatchBg.setStroke(utils.FixDP(1.0f), Color.parseColor("#FFFFFF"));
+        previewSwatch.setBackground(swatchBg);
+
+        topRow.addView(titleView);
+        topRow.addView(previewSwatch);
+        rowCard.addView(topRow);
+
+        // Bottom Row: Quick Palette Chips in Horizontal Scroll
+        HorizontalScrollView chipScroll = new HorizontalScrollView(context);
+        chipScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        scrollParams.setMargins(0, utils.FixDP(5), 0, 0);
+        chipScroll.setLayoutParams(scrollParams);
+
+        LinearLayout chipsContainer = new LinearLayout(context);
+        chipsContainer.setOrientation(LinearLayout.HORIZONTAL);
+        chipsContainer.setGravity(Gravity.CENTER_VERTICAL);
+
+        class PresetItem {
+            String label;
+            int color;
+            boolean isRainbow;
+            PresetItem(String l, int c, boolean r) { label = l; color = c; isRainbow = r; }
+        }
+
+        PresetItem[] presets = new PresetItem[]{
+            new PresetItem("🌈 Rainbow", -1, true),
+            new PresetItem("⚪ White", 0xFFFFFFFF, false),
+            new PresetItem("💎 Cyan", 0xFF00FFFF, false),
+            new PresetItem("🔥 Red", 0xFFFF2244, false),
+            new PresetItem("⚡ Gold", 0xFFFFB800, false),
+            new PresetItem("🌿 Green", 0xFF00E676, false),
+            new PresetItem("💜 Purple", 0xFFA855F7, false),
+            new PresetItem("🎨 Custom Wheel...", 0, false)
+        };
+
+        for (final PresetItem item : presets) {
+            TextView chip = new TextView(context);
+            chip.setText(item.label);
+            chip.setTextSize(9f);
+            chip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            chip.setPadding(utils.FixDP(6), utils.FixDP(2.5f), utils.FixDP(6), utils.FixDP(2.5f));
+            LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            chipParams.setMargins(0, 0, utils.FixDP(4), 0);
+            chip.setLayoutParams(chipParams);
+
+            GradientDrawable chipBg = new GradientDrawable();
+            chipBg.setColor(Color.parseColor("#1C1C24"));
+            chipBg.setCornerRadius(utils.FixDP(5));
+            chipBg.setStroke(utils.FixDP(0.8f), item.isRainbow ? Color.parseColor("#FFB800") : (item.color != 0 ? item.color : Color.parseColor("#555566")));
+            chip.setBackground(chipBg);
+            chip.setTextColor(item.isRainbow ? Color.parseColor("#FFD700") : (item.color != 0 ? item.color : Color.parseColor("#CCCCCC")));
+
+            chip.setOnClickListener(v -> {
+                if (!isMasterActive) {
+                    showLockedToast();
+                    return;
+                }
+                vibrateClick();
+                if (item.label.contains("Custom Wheel")) {
+                    showColorWheelDialog(ID, previewSwatch, swatchBg);
+                } else if (item.isRainbow) {
+                    ChangesID(ID, -1);
+                    swatchBg.setColor(Color.parseColor("#FFB800"));
+                    swatchBg.setStroke(utils.FixDP(1.2f), Color.parseColor("#00E676"));
+                    previewSwatch.invalidate();
+                } else {
+                    currentFovColor = item.color;
+                    ChangesID(ID, item.color);
+                    swatchBg.setColor(item.color);
+                    swatchBg.setStroke(utils.FixDP(1.0f), Color.WHITE);
+                    previewSwatch.invalidate();
+                }
+            });
+
+            chipsContainer.addView(chip);
+        }
+
+        chipScroll.addView(chipsContainer);
+        rowCard.addView(chipScroll);
+
+        topRow.setOnClickListener(v -> {
+            if (!isMasterActive) {
+                showLockedToast();
+                return;
+            }
+            vibrateClick();
+            showColorWheelDialog(ID, previewSwatch, swatchBg);
+        });
+
+        lockedRowViews.add(rowCard);
+        rowCard.setAlpha(isMasterActive ? 1.0f : 0.40f);
+
+        tabContentContainers.get(currentTab).addView(rowCard);
+    }
+
+    public static void showColorWheelDialog(final int ID, final View previewSwatch, final GradientDrawable swatchBg) {
+        if (context == null) return;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+                LinearLayout dialogLayout = new LinearLayout(context);
+                dialogLayout.setOrientation(LinearLayout.VERTICAL);
+                dialogLayout.setPadding(utils.FixDP(18), utils.FixDP(14), utils.FixDP(18), utils.FixDP(14));
+
+                TextView title = new TextView(context);
+                title.setText("🎨 FOV COLOR SPECTRUM WHEEL");
+                title.setTextSize(12f);
+                title.setTextColor(Color.parseColor("#FFB800"));
+                title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                title.setGravity(Gravity.CENTER);
+                dialogLayout.addView(title);
+
+                final View liveBox = new View(context);
+                LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, utils.FixDP(42));
+                boxParams.setMargins(0, utils.FixDP(10), 0, utils.FixDP(10));
+                liveBox.setLayoutParams(boxParams);
+                final GradientDrawable liveBoxBg = new GradientDrawable();
+                liveBoxBg.setCornerRadius(utils.FixDP(8));
+                liveBoxBg.setColor(currentFovColor);
+                liveBoxBg.setStroke(utils.FixDP(1.5f), Color.WHITE);
+                liveBox.setBackground(liveBoxBg);
+                dialogLayout.addView(liveBox);
+
+                final TextView hexLabel = new TextView(context);
+                hexLabel.setText("COLOR CODE: #" + Integer.toHexString(currentFovColor).toUpperCase());
+                hexLabel.setTextSize(10f);
+                hexLabel.setTextColor(Color.WHITE);
+                hexLabel.setGravity(Gravity.CENTER);
+                dialogLayout.addView(hexLabel);
+
+                TextView sliderLabel = new TextView(context);
+                sliderLabel.setText("Slide Hue (0° - 360° Rainbow):");
+                sliderLabel.setTextSize(9.5f);
+                sliderLabel.setTextColor(Color.parseColor("#AAAAAA"));
+                sliderLabel.setPadding(0, utils.FixDP(8), 0, utils.FixDP(4));
+                dialogLayout.addView(sliderLabel);
+
+                SeekBar hueBar = new SeekBar(context);
+                hueBar.setMax(360);
+                hueBar.setProgress(180);
+                hueBar.getThumb().setColorFilter(Color.parseColor("#FFB800"), PorterDuff.Mode.SRC_IN);
+                hueBar.getProgressDrawable().setColorFilter(Color.parseColor("#00E676"), PorterDuff.Mode.SRC_IN);
+
+                final int[] pickedColor = new int[]{currentFovColor};
+
+                hueBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        float[] hsv = new float[]{(float) progress, 1.0f, 1.0f};
+                        int c = Color.HSVToColor(hsv);
+                        pickedColor[0] = c;
+                        liveBoxBg.setColor(c);
+                        liveBox.invalidate();
+                        hexLabel.setText("COLOR CODE: #" + Integer.toHexString(c).toUpperCase());
+                        ChangesID(ID, c);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        vibrateClick();
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        vibrateClick();
+                    }
+                });
+                dialogLayout.addView(hueBar);
+
+                builder.setView(dialogLayout);
+                builder.setPositiveButton("APPLY COLOR", (dialog, which) -> {
+                    vibrateClick();
+                    currentFovColor = pickedColor[0];
+                    ChangesID(ID, pickedColor[0]);
+                    swatchBg.setColor(pickedColor[0]);
+                    previewSwatch.invalidate();
+                    dialog.dismiss();
+                });
+                builder.setNeutralButton("🌈 RGB RAINBOW", (dialog, which) -> {
+                    vibrateClick();
+                    ChangesID(ID, -1);
+                    swatchBg.setColor(Color.parseColor("#FFB800"));
+                    previewSwatch.invalidate();
+                    dialog.dismiss();
+                });
+                builder.setNegativeButton("CANCEL", (dialog, which) -> dialog.dismiss());
+                builder.create().show();
+            } catch (Exception ignored) {}
+        });
     }
 
     // Injection methods

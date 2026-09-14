@@ -188,6 +188,7 @@ public class DrawView extends View implements Runnable {
     }
 
     public static void playSuccessSound() {
+        if (!Menu.soundFxEnabled) return;
         new Thread(() -> {
             try {
                 ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);

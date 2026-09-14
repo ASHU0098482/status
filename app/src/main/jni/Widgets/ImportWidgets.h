@@ -4,6 +4,7 @@
 #include "Images.h"
 #include "Tab.h"
 #include "Tab1.h"
+#include "ColorPicker.h"
 
 class Widget {
 
@@ -14,6 +15,7 @@ private:
     SeekBar seekBar;
     Tab aTab;
     Tab1 aTab1;
+    ColorPicker colorPicker;
 
 public:
     Widget(JNIEnv* globEnv) {
@@ -30,6 +32,9 @@ public:
 
     void SeekBar(const char* name, jint value, jint max, const char* type, jint ID) {
         seekBar.create(env, name, value, max, type, ID);
+    }
+    void ColorPicker(const char* name, jint ID) {
+        colorPicker.create(env, name, ID);
     }
     void Tab(const char* name) {
         aTab.create(env, name);

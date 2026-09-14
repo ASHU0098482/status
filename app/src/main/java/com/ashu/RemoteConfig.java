@@ -26,10 +26,11 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 84;
+    public static int remoteVersionCode = 85;
     public static String updateUrl = "";
 
     public static boolean showWebsiteBanner = false;
+    public static String whatsappNumber = "";
 
     // Remote customizable UI assets
     public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/jack_logo.png";
@@ -44,6 +45,7 @@ public class RemoteConfig {
             
             // Query raw github with dynamic timestamp and random tokens to completely bypass caching
             String[] urlsToTry = new String[] {
+                "https://cdn.jsdelivr.net/gh/ASHU0098482/status@main/config.json?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
                 CONFIG_URL + "?t=" + System.currentTimeMillis() + "&rnd=" + (int)(Math.random() * 1000000),
                 CONFIG_URL + "?v=" + System.currentTimeMillis() + "&b=" + (int)(Math.random() * 1000000),
                 CONFIG_URL
@@ -95,6 +97,7 @@ public class RemoteConfig {
                         
                         remoteVersionCode = json.optInt("apk_version_code", 1);
                         updateUrl = json.optString("apk_update_url", "");
+                        whatsappNumber = json.optString("whatsapp_number", "");
 
                         logoUrl = json.optString("logo_url", "");
                         backgroundUrl = json.optString("background_url", "");

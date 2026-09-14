@@ -130,7 +130,7 @@ public class Login {
 
         // --- 1.1 Top VIP Pill Badge ---
         TextView vipBadge = new TextView(context);
-        vipBadge.setText("✦ VIP AUTHENTICATION PORTAL ✦");
+        vipBadge.setText("✦ WELCOME TO ASHU PANEL ✦");
         vipBadge.setTextColor(Color.parseColor("#FFB800"));
         vipBadge.setTextSize(9.5f);
         vipBadge.setTypeface(Typeface.DEFAULT_BOLD);
@@ -261,7 +261,7 @@ public class Login {
         card.addView(titleLayout);
 
         subtitle = new TextView(context);
-        subtitle.setText("FREE FIRE • VIP GAMING SYSTEM");
+        subtitle.setText("FREE FIRE MAX • SAFE & SECURE");
         subtitle.setTextSize(10.5f);
         subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setGravity(Gravity.CENTER);
@@ -494,25 +494,33 @@ public class Login {
         actionRowParams.setMargins(0, 0, 0, utils.FixDP(8));
         actionRow.setLayoutParams(actionRowParams);
 
-        Button buyKeyBtn = createSecondaryActionButton("🌐 GET KEY", v -> {
+        Button buyKeyBtn = createSecondaryActionButton("💬 GET KEY", v -> {
             triggerHaptic(20);
             try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
-                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(browserIntent);
+                String waNumber = RemoteConfig.whatsappNumber != null ? RemoteConfig.whatsappNumber.trim() : "";
+                String targetUrl;
+                if (!waNumber.isEmpty()) {
+                    String cleanNum = waNumber.replaceAll("[^0-9]", "");
+                    targetUrl = "https://wa.me/" + cleanNum + "?text=Hello%20Ashu%20Panel%2C%20I%20want%20to%20buy%20Key";
+                } else {
+                    targetUrl = "https://wa.me/?text=Hello%20Ashu%20Panel%2C%20I%20want%20to%20buy%20Key";
+                }
+                Intent waIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                waIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(waIntent);
             } catch (Exception e) {
-                showToast("Cannot open browser: " + e.getMessage());
+                showToast("Cannot open WhatsApp: " + e.getMessage());
             }
         });
 
-        Button supportBtn = createSecondaryActionButton("💬 SUPPORT", v -> {
+        Button supportBtn = createSecondaryActionButton("🌐 SUPPORT", v -> {
             triggerHaptic(20);
             try {
                 Intent supportIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
                 supportIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(supportIntent);
             } catch (Exception e) {
-                showToast("Cannot open link: " + e.getMessage());
+                showToast("Cannot open website: " + e.getMessage());
             }
         });
 
@@ -802,7 +810,7 @@ public class Login {
         disclaimerCard.addView(divider);
 
         // --- 5. System & Compatibility Specs (2x2 Grid) ---
-        String apkVersion = "V84.0";
+        String apkVersion = "V85.0";
         try {
             android.content.pm.PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             apkVersion = "V" + pInfo.versionName;

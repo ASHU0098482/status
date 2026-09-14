@@ -439,7 +439,7 @@ public class Login {
 
         // --- 1.6 High-Impact Primary Login Button ---
         loginButton = new Button(context);
-        loginButton.setText("UNLOCK VIP PANEL ➔");
+        loginButton.setText("UNLOCK ASHU PANEL ➔");
         loginButton.setTextColor(Color.parseColor("#0A0B10"));
         loginButton.setTextSize(14.5f);
         loginButton.setTypeface(Typeface.DEFAULT_BOLD);

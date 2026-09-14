@@ -188,23 +188,7 @@ public class DrawView extends View implements Runnable {
     }
 
     public static void playSuccessSound() {
-        if (!Menu.soundFxEnabled) return;
-        new Thread(() -> {
-            try {
-                ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 110);
-                Thread.sleep(120);
-                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 220);
-            } catch (Throwable t) {
-                try {
-                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                    if (sContext != null) {
-                        Ringtone r = RingtoneManager.getRingtone(sContext, notification);
-                        if (r != null) r.play();
-                    }
-                } catch (Throwable ignored) {}
-            }
-        }).start();
+        // Sound effects removed per user request
     }
 
     public void DrawActivationLoading(Canvas cvs, String brandName, float progress, boolean isDone, float alpha) {

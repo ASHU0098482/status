@@ -188,15 +188,10 @@ Java_com_ashu_Menu_Functions(JNIEnv *env, jclass clazz) {
     widget.Switch(OBFUSCATE("Silent Aim"), 103);
     widget.Switch(OBFUSCATE("Drag Headshot"), 1055);
     widget.Switch(OBFUSCATE("Sniper Auto Aim"), 500);
-    widget.Switch(OBFUSCATE("Aim Body / Chest"), 108);
-    widget.Switch(OBFUSCATE("Aim on Scope"), 201);
-    widget.Switch(OBFUSCATE("Aim on Fire"), 202);
     widget.Switch(OBFUSCATE("Show Fov"), 16);
-    widget.Switch(OBFUSCATE("Sound Effects FX"), 990);
     widget.SeekBar(OBFUSCATE("Adjust Headshot Rate"), 0, 100, "%", 104);
     widget.SeekBar(OBFUSCATE("Adjust FOV Size"), 10, 100, "%", 1077);
-    widget.SeekBar(OBFUSCATE("Aim Smoothness"), 1, 100, "%", 107);
-    widget.ColorPicker(OBFUSCATE("FOV Color & Style"), 1078);
+    widget.ColorPicker(OBFUSCATE("FOV Color Wheel"), 1078);
 }
 
 
@@ -260,18 +255,6 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
                 fovColorMode = 2; // Custom ARGB color
                 fovCustomColor = value;
             }
-            break;
-        case 201:
-            pAimbotPlayer.aimbotScope = !pAimbotPlayer.aimbotScope;
-            SendFeatuere(201, pAimbotPlayer.aimbotScope);
-            showNotification("Aim on Scope", pAimbotPlayer.aimbotScope);
-            break;
-        case 202:
-            pAimbotPlayer.aimbotShoot = !pAimbotPlayer.aimbotShoot;
-            SendFeatuere(202, pAimbotPlayer.aimbotShoot);
-            showNotification("Aim on Fire", pAimbotPlayer.aimbotShoot);
-            break;
-        case 990:
             break;
 
         case 105:
@@ -546,36 +529,11 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
             lastFpsTime = currentTime;
         }
 
-        // --- Esports Top-Right HUD Badge (Real-time FPS, MS Ping, Battery/Temp) ---
-        float hudW = 215.0f;
-        float hudH = 30.0f;
-        float hudX = (float)draw.getWidth() - hudW - 24.0f;
-        float hudY = 16.0f;
-        draw.DrawFilledRect(Color(10, 10, 15, 210), Rect(hudX, hudY, hudW, hudH));
-        draw.DrawLine(Color(255, 184, 0, 220), 1.2f, Vector2(hudX, hudY), Vector2(hudX + hudW, hudY));
-        draw.DrawLine(Color(255, 184, 0, 220), 1.2f, Vector2(hudX, hudY + hudH), Vector2(hudX + hudW, hudY + hudH));
-        draw.DrawLine(Color(255, 184, 0, 220), 1.2f, Vector2(hudX, hudY), Vector2(hudX, hudY + hudH));
-        draw.DrawLine(Color(255, 184, 0, 220), 1.2f, Vector2(hudX + hudW, hudY), Vector2(hudX + hudW, hudY + hudH));
-
-        int pingMs = 24 + ((int)(currentTime / 900) % 8);
-        char hudStr[64];
-        sprintf(hudStr, "⚡ %.0f FPS  |  %dms 🟢  |  37°C", fpsValue, pingMs);
-        draw.DrawText(Color(255, 255, 255, 240), hudStr, Vector2(hudX + 12.0f, hudY + 20.5f), 14.5f);
-
-        // --- Nearby Enemy Warning Radar ---
-        if (pAimbotPlayer.enableAimbot || MasterBool.enableESP) {
-            float radarW = 280.0f;
-            float radarH = 30.0f;
-            float radarX = ((float)draw.getWidth() - radarW) / 2.0f;
-            float radarY = 16.0f;
-            float pulse = 180.0f + sinf((float)currentTime / 200.0f) * 75.0f;
-            draw.DrawFilledRect(Color(26, 10, 10, 210), Rect(radarX, radarY, radarW, radarH));
-            draw.DrawLine(Color(255, 50, 50, (int)pulse), 1.5f, Vector2(radarX, radarY), Vector2(radarX + radarW, radarY));
-            draw.DrawLine(Color(255, 50, 50, (int)pulse), 1.5f, Vector2(radarX, radarY + radarH), Vector2(radarX + radarW, radarY + radarH));
-            draw.DrawLine(Color(255, 50, 50, (int)pulse), 1.5f, Vector2(radarX, radarY), Vector2(radarX, radarY + radarH));
-            draw.DrawLine(Color(255, 50, 50, (int)pulse), 1.5f, Vector2(radarX + radarW, radarY), Vector2(radarX + radarW, radarY + radarH));
-            draw.DrawText(Color(255, 80, 80, 255), "⚠️ RADAR: 2 ENEMIES NEARBY (<40M)", Vector2(radarX + 16.0f, radarY + 20.5f), 14.0f);
-        }
+        char fpsText[32];
+        sprintf(fpsText, "FPS- %.0f", fpsValue);
+        Vector2 fpsPos(30.0f, (float)draw.getHeight() - 40.0f);
+        draw.DrawText(Color(0, 0, 0, 200), fpsText, Vector2(fpsPos.X + 2.0f, fpsPos.Y + 2.0f), 30.0f);
+        draw.DrawText(Color(255, 184, 0, 255), fpsText, fpsPos, 30.0f);
 
         // --- Neon/RGB Glowing FOV Circle & Tactical Center Crosshair ---
         if (pEspPlayer.espDrawFov) {
@@ -596,8 +554,8 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 if (a == 0) a = 255;
                 coreColor = Color(r, g, b, a);
             } else {
-                // Default Cyan/White Neon
-                coreColor = Color(0, 240, 255, 255);
+                // Default White Core
+                coreColor = Color::White();
             }
 
             // Neon Breathing Glow Pulse

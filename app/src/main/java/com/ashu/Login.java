@@ -532,6 +532,22 @@ public class Login {
         actionRow.addView(supportBtn);
         card.addView(actionRow);
 
+        // --- 1.7b OBB 55 Panel Label ---
+        TextView obbLabel = new TextView(context);
+        obbLabel.setText("OBB 55 PANEL");
+        obbLabel.setTextColor(Color.parseColor("#FFB800"));
+        obbLabel.setTextSize(13.5f);
+        obbLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        obbLabel.setGravity(Gravity.CENTER);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            obbLabel.setLetterSpacing(0.12f);
+        }
+        LinearLayout.LayoutParams obbParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        obbParams.setMargins(0, utils.FixDP(4), 0, utils.FixDP(6));
+        obbLabel.setLayoutParams(obbParams);
+        card.addView(obbLabel);
+
         // --- 1.8 Loading / Verifying Indicator Container ---
         LinearLayout loadingLayout = new LinearLayout(context);
         loadingLayout.setOrientation(LinearLayout.HORIZONTAL);

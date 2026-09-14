@@ -1,19 +1,28 @@
 package com.ashu;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.net.Uri;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.*;
 
 import org.json.JSONObject;
@@ -22,8 +31,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import android.widget.LinearLayout;
 
 public class Login {
     private Context context;
@@ -51,7 +58,6 @@ public class Login {
     private static final String VERSION = "1.0";
     private static final String API_URL = "https://keyauth.win/api/1.3/";
 
-
     static {
         System.loadLibrary("hawdawdawdawda");
     }
@@ -60,67 +66,161 @@ public class Login {
         Login.globalContext = context;
         this.context = context;
         this.utils = new Utils(context);
-        Init(); // Show splash first
+        Init();
     }
 
+    private void triggerHaptic(int ms) {
+        try {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null) {
+                v.vibrate(ms);
+            }
+        } catch (Exception ignored) {}
+    }
 
     private void Init() {
         showNoticeIfAvailable();
-        // === STEP 1: Build the card view and all its children ===
+
+        // =========================================================================
+        // STEP 1: Build the Main Obsidian Glass Login Card
+        // =========================================================================
         card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER_HORIZONTAL);
         card.setPadding(
-                new Utils(context).FixDP(20),
-                new Utils(context).FixDP(18),
-                new Utils(context).FixDP(20),
-                new Utils(context).FixDP(18)
+                utils.FixDP(20),
+                utils.FixDP(20),
+                utils.FixDP(20),
+                utils.FixDP(20)
         );
 
-        GradientDrawable cardBg = new GradientDrawable();
-        cardBg.setColor(Color.parseColor("#1b1b1b"));
-        cardBg.setCornerRadius(new Utils(context).FixDP(18));
+        // Obsidian Glass Background with smooth 22dp squircle corners
+        final GradientDrawable cardBg = new GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[] {
+                        Color.parseColor("#EE10111A"),
+                        Color.parseColor("#F40A0B12")
+                }
+        );
+        cardBg.setCornerRadius(utils.FixDP(22));
+        cardBg.setStroke(utils.FixDP(1.5f), Color.parseColor("#FFB800"));
         card.setBackground(cardBg);
 
-        // Add logo
-        final ImageView logoView = new ImageView(context);
-        LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(
-                new Utils(context).FixDP(100),
-                new Utils(context).FixDP(100)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            card.setElevation(utils.FixDP(16));
+        }
+
+        // Breathing Animated Dual-Tone Neon Stroke on Card
+        ValueAnimator cardBorderGlow = ValueAnimator.ofObject(
+                new ArgbEvaluator(),
+                Color.parseColor("#FFB800"), // Golden Amber
+                Color.parseColor("#FFE066"), // Cyber Yellow Gold
+                Color.parseColor("#F59E0B"), // Deep Warm Amber
+                Color.parseColor("#FF8C00"), // Neon Dark Orange
+                Color.parseColor("#FFB800")
         );
-        logoParams.setMargins(0, 0, 0, new Utils(context).FixDP(10));
+        cardBorderGlow.setDuration(4000);
+        cardBorderGlow.setRepeatCount(ValueAnimator.INFINITE);
+        cardBorderGlow.setRepeatMode(ValueAnimator.RESTART);
+        cardBorderGlow.addUpdateListener(anim -> {
+            int color = (int) anim.getAnimatedValue();
+            cardBg.setStroke(utils.FixDP(1.5f), color);
+        });
+        cardBorderGlow.start();
+
+        // --- 1.1 Top VIP Pill Badge ---
+        TextView vipBadge = new TextView(context);
+        vipBadge.setText("✦ VIP AUTHENTICATION PORTAL ✦");
+        vipBadge.setTextColor(Color.parseColor("#FFB800"));
+        vipBadge.setTextSize(9.5f);
+        vipBadge.setTypeface(Typeface.DEFAULT_BOLD);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            vipBadge.setLetterSpacing(0.14f);
+        }
+        vipBadge.setGravity(Gravity.CENTER);
+
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(Color.parseColor("#22FFB800"));
+        badgeBg.setCornerRadius(utils.FixDP(20));
+        badgeBg.setStroke(utils.FixDP(1), Color.parseColor("#66FFB800"));
+        vipBadge.setBackground(badgeBg);
+        vipBadge.setPadding(utils.FixDP(12), utils.FixDP(4), utils.FixDP(12), utils.FixDP(4));
+
+        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        badgeParams.setMargins(0, 0, 0, utils.FixDP(12));
+        badgeParams.gravity = Gravity.CENTER_HORIZONTAL;
+        vipBadge.setLayoutParams(badgeParams);
+        card.addView(vipBadge);
+
+        // --- 1.2 Logo in Glowing Halo Frame ---
+        final FrameLayout logoRing = new FrameLayout(context);
+        int ringSize = utils.FixDP(90);
+        LinearLayout.LayoutParams ringParams = new LinearLayout.LayoutParams(ringSize, ringSize);
+        ringParams.setMargins(0, 0, 0, utils.FixDP(10));
+        ringParams.gravity = Gravity.CENTER_HORIZONTAL;
+        logoRing.setLayoutParams(ringParams);
+
+        GradientDrawable ringBg = new GradientDrawable();
+        ringBg.setShape(GradientDrawable.OVAL);
+        ringBg.setColor(Color.parseColor("#171825"));
+        ringBg.setStroke(utils.FixDP(2.0f), Color.parseColor("#FFB800"));
+        logoRing.setBackground(ringBg);
+        logoRing.setPadding(utils.FixDP(6), utils.FixDP(6), utils.FixDP(6), utils.FixDP(6));
+
+        final ImageView logoView = new ImageView(context);
+        FrameLayout.LayoutParams logoParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        );
+        logoParams.gravity = Gravity.CENTER;
         logoView.setLayoutParams(logoParams);
         logoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         logoView.setImageResource(R.mipmap.ic_launcher);
-        card.addView(logoView);
+        logoRing.addView(logoView);
+        card.addView(logoRing);
 
+        // Soft breathing scale animation on the logo ring
+        ValueAnimator logoGlowAnim = ValueAnimator.ofFloat(0.96f, 1.04f);
+        logoGlowAnim.setDuration(1600);
+        logoGlowAnim.setRepeatMode(ValueAnimator.REVERSE);
+        logoGlowAnim.setRepeatCount(ValueAnimator.INFINITE);
+        logoGlowAnim.addUpdateListener(anim -> {
+            float s = (float) anim.getAnimatedValue();
+            logoRing.setScaleX(s);
+            logoRing.setScaleY(s);
+        });
+        logoGlowAnim.start();
+
+        // Load dynamic logo from remote config if available
         if (RemoteConfig.logoUrl != null && !RemoteConfig.logoUrl.isEmpty()) {
-            
             String logoFetchUrl = RemoteConfig.logoUrl;
-            if (logoFetchUrl != null && !logoFetchUrl.isEmpty()) {
-                if (logoFetchUrl.contains("?")) {
-                    logoFetchUrl += "&t=" + System.currentTimeMillis();
-                } else {
-                    logoFetchUrl += "?t=" + System.currentTimeMillis();
-                }
+            if (logoFetchUrl.contains("?")) {
+                logoFetchUrl += "&t=" + System.currentTimeMillis();
+            } else {
+                logoFetchUrl += "?t=" + System.currentTimeMillis();
             }
             com.bumptech.glide.Glide.with(context)
-                .asBitmap()
-                .load(logoFetchUrl)
-                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                .skipMemoryCache(true)
-                .into(new com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
-                    @Override
-                    public void onResourceReady(@androidx.annotation.NonNull android.graphics.Bitmap resource, @androidx.annotation.Nullable com.bumptech.glide.request.transition.Transition<? super android.graphics.Bitmap> transition) {
-                        logoView.setImageBitmap(resource);
-                    }
-                    @Override
-                    public void onLoadCleared(@androidx.annotation.Nullable android.graphics.drawable.Drawable placeholder) {
-                    }
-                });
+                    .asBitmap()
+                    .load(logoFetchUrl)
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .into(new com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
+                        @Override
+                        public void onResourceReady(@androidx.annotation.NonNull android.graphics.Bitmap resource,
+                                @androidx.annotation.Nullable com.bumptech.glide.request.transition.Transition<? super android.graphics.Bitmap> transition) {
+                            android.graphics.Bitmap transparentBitmap = Utils.makeBlackTransparent(resource);
+                            logoView.setImageBitmap(transparentBitmap != null ? transparentBitmap : resource);
+                        }
+
+                        @Override
+                        public void onLoadCleared(@androidx.annotation.Nullable android.graphics.drawable.Drawable placeholder) {}
+                    });
         }
 
-        // Title with sky blue first word and white rest dynamically from RemoteConfig
+        // --- 1.3 App Title & Subtitle ---
         LinearLayout titleLayout = new LinearLayout(context);
         titleLayout.setOrientation(LinearLayout.HORIZONTAL);
         titleLayout.setGravity(Gravity.CENTER);
@@ -137,51 +237,73 @@ public class Login {
             secondWord = "";
         }
 
+        Typeface customGamingFont = null;
+        try {
+            customGamingFont = Typeface.createFromAsset(context.getAssets(), "fonts/aimkill_font.ttf");
+        } catch (Exception ignored) {}
+
         TextView titleRed = new TextView(context);
         titleRed.setText(firstWord + "  ");
-        titleRed.setTextSize(22);
-        titleRed.setTextColor(Color.parseColor("#FFB800")); // Golden Accent
-        titleRed.setTypeface(null, Typeface.BOLD);
+        titleRed.setTextSize(23);
+        titleRed.setTextColor(Color.parseColor("#FFB800"));
+        titleRed.setTypeface(customGamingFont != null ? customGamingFont : Typeface.DEFAULT_BOLD);
+        titleRed.setShadowLayer(18, 0, 0, Color.parseColor("#99FFB800")); // Radiant neon glow
 
         TextView titleWhite = new TextView(context);
         titleWhite.setText(secondWord);
-        titleWhite.setTextSize(22);
+        titleWhite.setTextSize(23);
         titleWhite.setTextColor(Color.WHITE);
-        titleWhite.setTypeface(null, Typeface.BOLD);
+        titleWhite.setTypeface(customGamingFont != null ? customGamingFont : Typeface.DEFAULT_BOLD);
+        titleWhite.setShadowLayer(10, 0, 0, Color.parseColor("#44FFFFFF"));
 
         titleLayout.addView(titleRed);
         titleLayout.addView(titleWhite);
         card.addView(titleLayout);
 
         subtitle = new TextView(context);
-        subtitle.setText("FREE FIRE");
-        subtitle.setTextSize(13);
-        subtitle.setTextColor(Color.LTGRAY);
+        subtitle.setText("FREE FIRE • VIP GAMING SYSTEM");
+        subtitle.setTextSize(10.5f);
+        subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, 0, 0, new Utils(context).FixDP(12));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            subtitle.setLetterSpacing(0.08f);
+        }
+        subtitle.setPadding(0, utils.FixDP(2), 0, utils.FixDP(14));
         card.addView(subtitle);
 
-        // Settings Layout (hidden by default)
+        // --- 1.4 Settings Layout (Root Bypass - hidden until login) ---
         settingsLayout = new LinearLayout(context);
         settingsLayout.setOrientation(LinearLayout.VERTICAL);
         settingsLayout.setVisibility(View.GONE);
 
+        GradientDrawable settingsCardBg = new GradientDrawable();
+        settingsCardBg.setColor(Color.parseColor("#151724"));
+        settingsCardBg.setCornerRadius(utils.FixDP(12));
+        settingsCardBg.setStroke(utils.FixDP(1), Color.parseColor("#2D3147"));
+        settingsLayout.setBackground(settingsCardBg);
+        settingsLayout.setPadding(utils.FixDP(12), utils.FixDP(8), utils.FixDP(12), utils.FixDP(8));
+
+        LinearLayout.LayoutParams settingsCardParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        settingsCardParams.setMargins(0, 0, 0, utils.FixDP(10));
+        settingsLayout.setLayoutParams(settingsCardParams);
+
         LinearLayout suRow = new LinearLayout(context);
         suRow.setOrientation(LinearLayout.HORIZONTAL);
         suRow.setGravity(Gravity.CENTER_VERTICAL);
-        suRow.setPadding(0, new Utils(context).FixDP(5), 0, new Utils(context).FixDP(5));
+        suRow.setPadding(0, utils.FixDP(4), 0, utils.FixDP(4));
 
         suLabel = new TextView(context);
-        suLabel.setText("ENABLE ROOT BYPASS");
+        suLabel.setText("⚡ ENABLE ROOT BYPASS");
         suLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        suLabel.setTextSize(15);
+        suLabel.setTextSize(13);
         suLabel.setTextColor(Color.WHITE);
         suLabel.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 
         suToggle = new Switch(context);
         suToggle.setChecked(isSuRenamed());
-
         suToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            triggerHaptic(25);
             String from = isChecked ? "/system/xbin/su" : "/system/xbin/su1";
             String to = isChecked ? "/system/xbin/su1" : "/system/xbin/su";
             try {
@@ -202,40 +324,48 @@ public class Login {
         settingsLayout.addView(suRow);
         card.addView(settingsLayout);
 
-        // License input container with Paste button
+        // --- 1.5 Futuristic License Key Input Container ---
         inputContainer = new LinearLayout(context);
         inputContainer.setOrientation(LinearLayout.HORIZONTAL);
         inputContainer.setGravity(Gravity.CENTER_VERTICAL);
-        
-        GradientDrawable inputContainerBg = new GradientDrawable();
-        inputContainerBg.setColor(Color.parseColor("#262626"));
-        inputContainerBg.setCornerRadius(new Utils(context).FixDP(12));
-        inputContainerBg.setStroke(new Utils(context).FixDP(1), Color.parseColor("#3a3a3a"));
+
+        final GradientDrawable inputContainerBg = new GradientDrawable();
+        inputContainerBg.setColor(Color.parseColor("#141624")); // Sleek dark futuristic obsidian
+        inputContainerBg.setCornerRadius(utils.FixDP(14));
+        inputContainerBg.setStroke(utils.FixDP(1.2f), Color.parseColor("#2C3046"));
         inputContainer.setBackground(inputContainerBg);
 
         LinearLayout.LayoutParams inputContainerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        inputContainerParams.setMargins(0, new Utils(context).FixDP(6), 0, new Utils(context).FixDP(10));
+        inputContainerParams.setMargins(0, utils.FixDP(4), 0, utils.FixDP(12));
         inputContainer.setLayoutParams(inputContainerParams);
         inputContainer.setPadding(
-                new Utils(context).FixDP(12),
-                new Utils(context).FixDP(4),
-                new Utils(context).FixDP(6),
-                new Utils(context).FixDP(4)
+                utils.FixDP(12),
+                utils.FixDP(4),
+                utils.FixDP(6),
+                utils.FixDP(4)
         );
+
+        // Left Key Icon
+        TextView keyIcon = new TextView(context);
+        keyIcon.setText("🔑");
+        keyIcon.setTextSize(14);
+        keyIcon.setPadding(0, 0, utils.FixDP(6), 0);
+        inputContainer.addView(keyIcon);
 
         // License EditText
         inputLicense = new EditText(context);
         inputLicense.setHint("ENTER LICENSE KEY");
-        inputLicense.setTextSize(14);
+        inputLicense.setTextSize(13.5f);
         inputLicense.setTextColor(Color.WHITE);
-        inputLicense.setHintTextColor(Color.parseColor("#777777"));
+        inputLicense.setHintTextColor(Color.parseColor("#64748B"));
         inputLicense.setSingleLine(true);
         inputLicense.setBackground(null);
-        inputLicense.setPadding(0, new Utils(context).FixDP(8), new Utils(context).FixDP(6), new Utils(context).FixDP(8));
-        
+        inputLicense.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        inputLicense.setPadding(0, utils.FixDP(10), utils.FixDP(6), utils.FixDP(10));
+
         LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f
         );
@@ -245,31 +375,44 @@ public class Login {
         inputLicense.setText(context.getSharedPreferences("ASHUPrefs", Context.MODE_PRIVATE)
                 .getString("saved_license", ""));
 
-        // Paste Button
+        // Interactive focus glow transition
+        inputLicense.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                inputContainerBg.setStroke(utils.FixDP(1.5f), Color.parseColor("#FFB800"));
+            } else {
+                inputContainerBg.setStroke(utils.FixDP(1.2f), Color.parseColor("#2C3046"));
+            }
+        });
+
+        // Modern Glowing Paste Button
         pasteButton = new Button(context);
         pasteButton.setText("📋 PASTE");
-        pasteButton.setTextColor(Color.BLACK);
+        pasteButton.setTextColor(Color.parseColor("#0B0C10"));
         pasteButton.setTextSize(11);
         pasteButton.setTypeface(Typeface.DEFAULT_BOLD);
         pasteButton.setPadding(
-                new Utils(context).FixDP(10),
-                new Utils(context).FixDP(6),
-                new Utils(context).FixDP(10),
-                new Utils(context).FixDP(6)
+                utils.FixDP(12),
+                utils.FixDP(6),
+                utils.FixDP(12),
+                utils.FixDP(6)
         );
-        GradientDrawable pasteBg = new GradientDrawable();
-        pasteBg.setColor(Color.parseColor("#FFB800")); // Golden Amber
-        pasteBg.setCornerRadius(new Utils(context).FixDP(8));
+
+        GradientDrawable pasteBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[] { Color.parseColor("#FFB800"), Color.parseColor("#F59E0B") }
+        );
+        pasteBg.setCornerRadius(utils.FixDP(10));
         pasteButton.setBackground(pasteBg);
 
         LinearLayout.LayoutParams pasteParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                new Utils(context).FixDP(36)
+                utils.FixDP(38)
         );
         pasteParams.gravity = Gravity.CENTER_VERTICAL;
         pasteButton.setLayoutParams(pasteParams);
 
         pasteButton.setOnClickListener(v -> {
+            triggerHaptic(25);
             try {
                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                 if (clipboard != null && clipboard.hasPrimaryClip() && clipboard.getPrimaryClip().getItemCount() > 0) {
@@ -294,40 +437,65 @@ public class Login {
         inputContainer.addView(pasteButton);
         card.addView(inputContainer);
 
-        // Login button - Centered & styled
+        // --- 1.6 High-Impact Primary Login Button ---
         loginButton = new Button(context);
-        loginButton.setText("LOGIN");
-        loginButton.setTextColor(Color.WHITE);
-        loginButton.setTextSize(15);
+        loginButton.setText("UNLOCK VIP PANEL ➔");
+        loginButton.setTextColor(Color.parseColor("#0A0B10"));
+        loginButton.setTextSize(14.5f);
         loginButton.setTypeface(Typeface.DEFAULT_BOLD);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            loginButton.setLetterSpacing(0.08f);
+            loginButton.setElevation(utils.FixDP(6));
+        }
         loginButton.setPadding(
-                new Utils(context).FixDP(12),
-                new Utils(context).FixDP(12),
-                new Utils(context).FixDP(12),
-                new Utils(context).FixDP(12)
+                utils.FixDP(14),
+                utils.FixDP(12),
+                utils.FixDP(14),
+                utils.FixDP(12)
         );
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor("#F59E0B")); // Golden Amber
-        btnBg.setCornerRadius(new Utils(context).FixDP(50));
+
+        GradientDrawable btnBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[] {
+                        Color.parseColor("#FFB800"),
+                        Color.parseColor("#FF8C00"),
+                        Color.parseColor("#FFA000")
+                }
+        );
+        btnBg.setCornerRadius(utils.FixDP(14));
         loginButton.setBackground(btnBg);
         loginButton.setGravity(Gravity.CENTER);
 
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, utils.FixDP(48));
         btnParams.gravity = Gravity.CENTER_HORIZONTAL;
-        btnParams.setMargins(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(2));
+        btnParams.setMargins(0, utils.FixDP(2), 0, utils.FixDP(10));
         loginButton.setLayoutParams(btnParams);
+
+        // Interactive touch scale feedback with haptic vibration
+        loginButton.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).start();
+                triggerHaptic(20);
+            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+            }
+            return false;
+        });
+
         card.addView(loginButton);
 
-        // Visit Website Button
-        Button visitWebsiteBtn = new Button(context);
-        visitWebsiteBtn.setText("🌐 VISIT WEBSITE");
-        visitWebsiteBtn.setTextColor(Color.parseColor("#FFB800"));
-        visitWebsiteBtn.setTextSize(12f);
-        visitWebsiteBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        visitWebsiteBtn.setBackgroundColor(Color.TRANSPARENT);
-        visitWebsiteBtn.setPadding(0, new Utils(context).FixDP(4), 0, new Utils(context).FixDP(4));
-        visitWebsiteBtn.setOnClickListener(v -> {
+        // --- 1.7 Secondary Action Pill Grid (Get Key / Support) ---
+        LinearLayout actionRow = new LinearLayout(context);
+        actionRow.setOrientation(LinearLayout.HORIZONTAL);
+        actionRow.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams actionRowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        actionRowParams.setMargins(0, 0, 0, utils.FixDP(8));
+        actionRow.setLayoutParams(actionRowParams);
+
+        Button buyKeyBtn = createSecondaryActionButton("🌐 GET KEY", v -> {
+            triggerHaptic(20);
             try {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
                 browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -336,13 +504,31 @@ public class Login {
                 showToast("Cannot open browser: " + e.getMessage());
             }
         });
-        card.addView(visitWebsiteBtn);
 
-        // Loading indicator
+        Button supportBtn = createSecondaryActionButton("💬 SUPPORT", v -> {
+            triggerHaptic(20);
+            try {
+                Intent supportIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
+                supportIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(supportIntent);
+            } catch (Exception e) {
+                showToast("Cannot open link: " + e.getMessage());
+            }
+        });
+
+        actionRow.addView(buyKeyBtn);
+        // Small spacer
+        View spacer = new View(context);
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(8), ViewGroup.LayoutParams.MATCH_PARENT));
+        actionRow.addView(spacer);
+        actionRow.addView(supportBtn);
+        card.addView(actionRow);
+
+        // --- 1.8 Loading / Verifying Indicator Container ---
         LinearLayout loadingLayout = new LinearLayout(context);
         loadingLayout.setOrientation(LinearLayout.HORIZONTAL);
         loadingLayout.setGravity(Gravity.CENTER);
-        loadingLayout.setPadding(0, 10, 0, 10);
+        loadingLayout.setPadding(0, utils.FixDP(6), 0, utils.FixDP(6));
 
         loadingBar = new ProgressBar(context);
         loadingBar.setVisibility(View.GONE);
@@ -351,21 +537,33 @@ public class Login {
         loadingText = new TextView(context);
         loadingText.setText("Verifying License Key...");
         loadingText.setTextColor(Color.parseColor("#FFB800"));
-        loadingText.setTextSize(14);
-        loadingText.setPadding(20, 0, 0, 0);
+        loadingText.setTextSize(13);
+        loadingText.setTypeface(Typeface.DEFAULT_BOLD);
+        loadingText.setPadding(utils.FixDP(12), 0, 0, 0);
         loadingText.setVisibility(View.GONE);
 
         loadingLayout.addView(loadingBar);
         loadingLayout.addView(loadingText);
         card.addView(loadingLayout);
 
-        // === STEP 2: Build the root view and add card + animated disclaimer inside a ScrollView ===
+        // =========================================================================
+        // STEP 2: Root View, Ambient Cyber Glow, and ScrollView Setup
+        // =========================================================================
         rootContainer = new LinearLayout(context);
         rootContainer.setOrientation(LinearLayout.VERTICAL);
         rootContainer.setGravity(Gravity.CENTER);
-        rootContainer.setBackgroundColor(Color.rgb(23, 23, 23));
 
-        // ScrollView ensures both Card and Disclaimers are perfectly viewable on all screen sizes
+        // Deep rich cyber gradient background
+        GradientDrawable cyberRootBg = new GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[] {
+                        Color.parseColor("#08090E"),
+                        Color.parseColor("#10121C"),
+                        Color.parseColor("#0A0B10")
+                }
+        );
+        rootContainer.setBackground(cyberRootBg);
+
         ScrollView scrollView = new ScrollView(context);
         scrollView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -374,54 +572,59 @@ public class Login {
 
         LinearLayout scrollContent = new LinearLayout(context);
         scrollContent.setOrientation(LinearLayout.VERTICAL);
-        scrollContent.setGravity(Gravity.CENTER); // Perfectly centers login card and disclaimers on all screens
+        scrollContent.setGravity(Gravity.CENTER);
         scrollContent.setPadding(
-                new Utils(context).FixDP(16),
-                new Utils(context).FixDP(20),
-                new Utils(context).FixDP(16),
-                new Utils(context).FixDP(20)
+                utils.FixDP(16),
+                utils.FixDP(24),
+                utils.FixDP(16),
+                utils.FixDP(24)
         );
 
         LinearLayout.LayoutParams cardLayoutParam = new LinearLayout.LayoutParams(
-                new Utils(context).FixDP(300),
+                utils.FixDP(315),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         cardLayoutParam.gravity = Gravity.CENTER_HORIZONTAL;
-        cardLayoutParam.setMargins(0, new Utils(context).FixDP(10), 0, new Utils(context).FixDP(12));
+        cardLayoutParam.setMargins(0, utils.FixDP(8), 0, utils.FixDP(14));
         card.setLayoutParams(cardLayoutParam);
 
         scrollContent.addView(card);
         scrollContent.addView(createDisclaimerCard());
         scrollView.addView(scrollContent);
 
-        // Card entrance animation
+        // Card entrance animation with smooth overshoot
         card.setAlpha(0f);
-        card.setTranslationY(new Utils(context).FixDP(25));
+        card.setScaleX(0.94f);
+        card.setScaleY(0.94f);
+        card.setTranslationY(utils.FixDP(30));
         card.animate()
                 .alpha(1f)
+                .scaleX(1.0f)
+                .scaleY(1.0f)
                 .translationY(0)
-                .setDuration(600)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .setDuration(650)
+                .setInterpolator(new OvershootInterpolator(1.1f))
                 .start();
 
         boolean hasBackground = RemoteConfig.backgroundUrl != null && !RemoteConfig.backgroundUrl.isEmpty();
 
         if (hasBackground) {
-            // Use FrameLayout so background image sits behind the scrollable content
-            android.widget.FrameLayout rootFrame = new android.widget.FrameLayout(context);
+            FrameLayout rootFrame = new FrameLayout(context);
             rootFrame.setLayoutParams(new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
             ImageView backgroundView = new ImageView(context);
-            backgroundView.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+            backgroundView.setLayoutParams(new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             backgroundView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             rootFrame.addView(backgroundView);
 
-            GradientDrawable cardBgOver = new GradientDrawable();
-            cardBgOver.setColor(Color.parseColor("#E61b1b1b"));
-            cardBgOver.setCornerRadius(new Utils(context).FixDP(18));
-            card.setBackground(cardBgOver);
+            // Dark cinematic glass overlay over custom background
+            View overlayDim = new View(context);
+            overlayDim.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            overlayDim.setBackgroundColor(Color.parseColor("#CC08090E"));
+            rootFrame.addView(overlayDim);
 
             rootFrame.addView(scrollView);
             rootContainer.addView(rootFrame);
@@ -437,45 +640,90 @@ public class Login {
         loginButton.setOnClickListener(v -> handleLogin());
     }
 
+    private Button createSecondaryActionButton(String title, View.OnClickListener listener) {
+        Button btn = new Button(context);
+        btn.setText(title);
+        btn.setTextColor(Color.parseColor("#FFB800"));
+        btn.setTextSize(11f);
+        btn.setTypeface(Typeface.DEFAULT_BOLD);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            btn.setLetterSpacing(0.06f);
+        }
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.parseColor("#151724"));
+        bg.setCornerRadius(utils.FixDP(12));
+        bg.setStroke(utils.FixDP(1), Color.parseColor("#2C3148"));
+        btn.setBackground(bg);
+        btn.setPadding(utils.FixDP(10), utils.FixDP(8), utils.FixDP(10), utils.FixDP(8));
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0, utils.FixDP(38), 1.0f);
+        btn.setLayoutParams(params);
+
+        btn.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start();
+            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
+            }
+            return false;
+        });
+
+        btn.setOnClickListener(listener);
+        return btn;
+    }
+
     private LinearLayout createDisclaimerCard() {
         LinearLayout disclaimerCard = new LinearLayout(context);
         disclaimerCard.setOrientation(LinearLayout.VERTICAL);
         disclaimerCard.setGravity(Gravity.NO_GRAVITY);
 
-        int padH = new Utils(context).FixDP(13);
-        int padV = new Utils(context).FixDP(11);
+        int padH = utils.FixDP(14);
+        int padV = utils.FixDP(12);
         disclaimerCard.setPadding(padH, padV, padH, padV);
 
-        // Modern Cyber Dark Card Background with dynamic neon border
-        final GradientDrawable cardBg = new GradientDrawable();
-        cardBg.setColor(Color.parseColor("#E6141414")); // Lightweight dark translucent
-        cardBg.setCornerRadius(new Utils(context).FixDP(14));
-        cardBg.setStroke(new Utils(context).FixDP(1.2f), Color.parseColor("#FFB800"));
+        // Modern Cyber Obsidian Card Background with dynamic neon border
+        final GradientDrawable cardBg = new GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[] {
+                        Color.parseColor("#EE0F1018"),
+                        Color.parseColor("#F4090A11")
+                }
+        );
+        cardBg.setCornerRadius(utils.FixDP(16));
+        cardBg.setStroke(utils.FixDP(1.2f), Color.parseColor("#FFB800"));
         disclaimerCard.setBackground(cardBg);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            disclaimerCard.setElevation(utils.FixDP(10));
+        }
+
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                new Utils(context).FixDP(300),
+                utils.FixDP(315),
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         cardParams.gravity = Gravity.CENTER_HORIZONTAL;
-        cardParams.setMargins(0, new Utils(context).FixDP(15), 0, new Utils(context).FixDP(12));
+        cardParams.setMargins(0, 0, 0, utils.FixDP(16));
         disclaimerCard.setLayoutParams(cardParams);
 
         // --- 1. Header: 🛡️ DISCLAIMERS ---
         TextView disclaimerTitle = new TextView(context);
-        disclaimerTitle.setText("🛡️ DISCLAIMERS :");
+        disclaimerTitle.setText("🛡️ SECURITY & USAGE GUIDELINES");
         disclaimerTitle.setTextColor(Color.parseColor("#FFB800"));
         disclaimerTitle.setTextSize(11.5f);
         disclaimerTitle.setTypeface(Typeface.DEFAULT_BOLD);
-        disclaimerTitle.setLetterSpacing(0.03f);
-        disclaimerTitle.setPadding(0, 0, 0, new Utils(context).FixDP(3));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            disclaimerTitle.setLetterSpacing(0.04f);
+        }
+        disclaimerTitle.setPadding(0, 0, 0, utils.FixDP(4));
         disclaimerCard.addView(disclaimerTitle);
 
         // --- 2. Disclaimer Text Items ---
         String[] disclaimers = new String[] {
-            "• Not responsible for account bans. Use at own risk!",
-            "• Not permitted in official tournaments & competitions!",
-            "• Designed solely for enhanced in-game experience."
+                "• Not responsible for account bans. Use at own risk!",
+                "• Not permitted in official tournaments & competitions!",
+                "• Designed solely for enhanced in-game experience."
         };
 
         for (String item : disclaimers) {
@@ -485,31 +733,31 @@ public class Login {
             tv.setTextSize(9.5f);
             tv.setTypeface(Typeface.DEFAULT_BOLD);
             tv.setLineSpacing(0, 1.15f);
-            tv.setPadding(0, new Utils(context).FixDP(1), 0, new Utils(context).FixDP(1));
+            tv.setPadding(0, utils.FixDP(1), 0, utils.FixDP(1));
             disclaimerCard.addView(tv);
         }
 
-        // --- 3. STRICT NO-REFUND POLICY Box (Unchanged, Compact & Sleek) ---
+        // --- 3. STRICT NO-REFUND POLICY Box ---
         final LinearLayout refundBox = new LinearLayout(context);
         refundBox.setOrientation(LinearLayout.VERTICAL);
         refundBox.setPadding(
-                new Utils(context).FixDP(10),
-                new Utils(context).FixDP(7),
-                new Utils(context).FixDP(10),
-                new Utils(context).FixDP(7)
+                utils.FixDP(10),
+                utils.FixDP(8),
+                utils.FixDP(10),
+                utils.FixDP(8)
         );
 
         final GradientDrawable refundBg = new GradientDrawable();
-        refundBg.setColor(Color.parseColor("#221214")); // Dark luxury red tint
-        refundBg.setCornerRadius(new Utils(context).FixDP(8));
-        refundBg.setStroke(new Utils(context).FixDP(1), Color.parseColor("#EF4444"));
+        refundBg.setColor(Color.parseColor("#221215")); // Dark luxury red tint
+        refundBg.setCornerRadius(utils.FixDP(10));
+        refundBg.setStroke(utils.FixDP(1), Color.parseColor("#EF4444"));
         refundBox.setBackground(refundBg);
 
         LinearLayout.LayoutParams refundParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        refundParams.setMargins(0, new Utils(context).FixDP(7), 0, new Utils(context).FixDP(7));
+        refundParams.setMargins(0, utils.FixDP(8), 0, utils.FixDP(8));
         refundBox.setLayoutParams(refundParams);
 
         TextView refundTitle = new TextView(context);
@@ -517,7 +765,7 @@ public class Login {
         refundTitle.setTextColor(Color.parseColor("#FF4D4D"));
         refundTitle.setTextSize(10.5f);
         refundTitle.setTypeface(Typeface.DEFAULT_BOLD);
-        refundTitle.setPadding(0, 0, 0, new Utils(context).FixDP(2));
+        refundTitle.setPadding(0, 0, 0, utils.FixDP(2));
         refundBox.addView(refundTitle);
 
         TextView refundMsg1 = new TextView(context);
@@ -525,7 +773,7 @@ public class Login {
         refundMsg1.setTextColor(Color.parseColor("#FECACA"));
         refundMsg1.setTextSize(9f);
         refundMsg1.setTypeface(Typeface.DEFAULT_BOLD);
-        refundMsg1.setPadding(0, 0, 0, new Utils(context).FixDP(1));
+        refundMsg1.setPadding(0, 0, 0, utils.FixDP(1));
         refundBox.addView(refundMsg1);
 
         TextView refundMsg2 = new TextView(context);
@@ -533,7 +781,7 @@ public class Login {
         refundMsg2.setTextColor(Color.parseColor("#FECACA"));
         refundMsg2.setTextSize(9f);
         refundMsg2.setTypeface(Typeface.DEFAULT_BOLD);
-        refundMsg2.setPadding(0, 0, 0, new Utils(context).FixDP(1));
+        refundMsg2.setPadding(0, 0, 0, utils.FixDP(1));
         refundBox.addView(refundMsg2);
 
         TextView refundMsg3 = new TextView(context);
@@ -547,14 +795,14 @@ public class Login {
         // --- 4. Divider Line ---
         View divider = new View(context);
         divider.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, new Utils(context).FixDP(1)));
-        divider.setBackgroundColor(Color.parseColor("#262626"));
+                ViewGroup.LayoutParams.MATCH_PARENT, utils.FixDP(1)));
+        divider.setBackgroundColor(Color.parseColor("#26293A"));
         LinearLayout.LayoutParams divParams = (LinearLayout.LayoutParams) divider.getLayoutParams();
-        divParams.setMargins(0, new Utils(context).FixDP(2), 0, new Utils(context).FixDP(6));
+        divParams.setMargins(0, utils.FixDP(2), 0, utils.FixDP(6));
         disclaimerCard.addView(divider);
 
-        // --- 5. System & Compatibility Specs (Compact 2x2 Grid) ---
-        String apkVersion = "V46.0";
+        // --- 5. System & Compatibility Specs (2x2 Grid) ---
+        String apkVersion = "V84.0";
         try {
             android.content.pm.PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             apkVersion = "V" + pInfo.versionName;
@@ -564,7 +812,7 @@ public class Login {
         LinearLayout specRow1 = new LinearLayout(context);
         specRow1.setOrientation(LinearLayout.HORIZONTAL);
         specRow1.setGravity(Gravity.CENTER_VERTICAL);
-        specRow1.setPadding(0, new Utils(context).FixDP(1), 0, new Utils(context).FixDP(1));
+        specRow1.setPadding(0, utils.FixDP(2), 0, utils.FixDP(2));
 
         TextView tvApk = createCompactBadge("📱 APK: " + apkVersion, "#FFB800");
         TextView tvGame = createCompactBadge("🎮 FF MAX 64BIT", "#FFFFFF");
@@ -576,7 +824,7 @@ public class Login {
         LinearLayout specRow2 = new LinearLayout(context);
         specRow2.setOrientation(LinearLayout.HORIZONTAL);
         specRow2.setGravity(Gravity.CENTER_VERTICAL);
-        specRow2.setPadding(0, new Utils(context).FixDP(1), 0, new Utils(context).FixDP(1));
+        specRow2.setPadding(0, utils.FixDP(2), 0, utils.FixDP(2));
 
         TextView tvArch = createCompactBadge("⚙️ ARM64-V8A (x64)", "#94A3B8");
         specRow2.addView(tvArch);
@@ -587,9 +835,9 @@ public class Login {
         statusContainer.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 
         final View liveDot = new View(context);
-        int dotSize = new Utils(context).FixDP(6);
+        int dotSize = utils.FixDP(7);
         LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dotSize, dotSize);
-        dotParams.setMargins(0, 0, new Utils(context).FixDP(4), 0);
+        dotParams.setMargins(0, 0, utils.FixDP(5), 0);
         liveDot.setLayoutParams(dotParams);
         GradientDrawable dotDrawable = new GradientDrawable();
         dotDrawable.setShape(GradientDrawable.OVAL);
@@ -608,10 +856,10 @@ public class Login {
         disclaimerCard.addView(specRow2);
 
         // Live pulse animation on server dot
-        android.animation.ValueAnimator pulseAnim = android.animation.ValueAnimator.ofFloat(0.3f, 1.0f);
+        ValueAnimator pulseAnim = ValueAnimator.ofFloat(0.3f, 1.0f);
         pulseAnim.setDuration(750);
-        pulseAnim.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-        pulseAnim.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        pulseAnim.setRepeatMode(ValueAnimator.REVERSE);
+        pulseAnim.setRepeatCount(ValueAnimator.INFINITE);
         pulseAnim.addUpdateListener(anim -> {
             float val = (float) anim.getAnimatedValue();
             liveDot.setAlpha(val);
@@ -620,21 +868,20 @@ public class Login {
         });
         pulseAnim.start();
 
-        // --- 6. Card Animations ---
-        // Dynamic Breathing Golden Glow Border
-        android.animation.ValueAnimator borderGlowAnim = android.animation.ValueAnimator.ofObject(
-                new android.animation.ArgbEvaluator(),
+        // Dynamic Breathing Golden Glow Border for Disclaimer Card
+        ValueAnimator borderGlowAnim = ValueAnimator.ofObject(
+                new ArgbEvaluator(),
                 Color.parseColor("#FFD700"),
                 Color.parseColor("#F59E0B"),
                 Color.parseColor("#D97706"),
                 Color.parseColor("#FFD700")
         );
         borderGlowAnim.setDuration(3500);
-        borderGlowAnim.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        borderGlowAnim.setRepeatMode(android.animation.ValueAnimator.RESTART);
+        borderGlowAnim.setRepeatCount(ValueAnimator.INFINITE);
+        borderGlowAnim.setRepeatMode(ValueAnimator.RESTART);
         borderGlowAnim.addUpdateListener(anim -> {
             int animatedColor = (int) anim.getAnimatedValue();
-            cardBg.setStroke(new Utils(context).FixDP(1.2f), animatedColor);
+            cardBg.setStroke(utils.FixDP(1.2f), animatedColor);
         });
         borderGlowAnim.start();
 
@@ -642,7 +889,7 @@ public class Login {
         disclaimerCard.setAlpha(0f);
         disclaimerCard.setScaleX(0.95f);
         disclaimerCard.setScaleY(0.95f);
-        disclaimerCard.setTranslationY(new Utils(context).FixDP(30));
+        disclaimerCard.setTranslationY(utils.FixDP(30));
         disclaimerCard.animate()
                 .alpha(1f)
                 .scaleX(1.0f)
@@ -650,7 +897,7 @@ public class Login {
                 .translationY(0)
                 .setDuration(600)
                 .setStartDelay(150)
-                .setInterpolator(new android.view.animation.OvershootInterpolator(1.1f))
+                .setInterpolator(new OvershootInterpolator(1.1f))
                 .start();
 
         return disclaimerCard;
@@ -669,6 +916,7 @@ public class Login {
     private void handleLogin() {
         final String licenseKey = inputLicense.getText().toString().trim();
         if (licenseKey.isEmpty()) {
+            triggerHaptic(40);
             showToast("License key required.");
             return;
         }
@@ -684,7 +932,7 @@ public class Login {
         loginButton.setEnabled(false);
         loadingBar.setVisibility(View.VISIBLE);
         loadingText.setVisibility(View.VISIBLE);
-        setStatus("🔄 Connecting to server...", Color.WHITE, true);
+        setStatus("🔄 Connecting to VIP Gateway...", Color.parseColor("#FFB800"), true);
 
         new Thread(() -> {
             try {
@@ -704,7 +952,7 @@ public class Login {
                     return;
                 }
 
-                setStatus("🔐 Verifying license...", Color.WHITE, true);
+                setStatus("🔐 Decrypting & verifying license...", Color.parseColor("#FFB800"), true);
 
                 String encodedKey = java.net.URLEncoder.encode(licenseKey, "UTF-8");
                 String encodedHwid = java.net.URLEncoder.encode(hwid, "UTF-8");
@@ -723,6 +971,7 @@ public class Login {
                     Menu.userLicenseKey = licenseKey;
 
                     new Handler(Looper.getMainLooper()).post(() -> {
+                        triggerHaptic(50);
                         new Menu(context, 1);
                         isSettingsVisible = true;
                         settingsLayout.setVisibility(View.VISIBLE);
@@ -737,7 +986,6 @@ public class Login {
                         if (launchIntent != null) {
                             context.startActivity(launchIntent);
                         } else {
-                            // Fallback: try launching directly via explicit intent
                             try {
                                 Intent fallback = new Intent();
                                 fallback.setClassName("com.dts.freefiremax", "com.epicgames.ue4.SplashActivity");
@@ -769,6 +1017,7 @@ public class Login {
 
     private void postError(String message) {
         new Handler(Looper.getMainLooper()).post(() -> {
+            triggerHaptic(40);
             showToast(message);
             loginButton.setEnabled(true);
             loadingBar.setVisibility(View.GONE);
@@ -789,7 +1038,6 @@ public class Login {
         while ((line = reader.readLine()) != null) response.append(line);
         reader.close();
         String raw = response.toString().trim();
-        // If server returned a plain string (not JSON), wrap it as error JSON
         if (!raw.startsWith("{")) {
             return new JSONObject("{\"success\":false,\"message\":\"Server error: " + raw + "\"}");
         }
@@ -824,13 +1072,13 @@ public class Login {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     String noticeTitle = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
-                        ? RemoteConfig.noticeTitle : "📢 Notice";
+                            ? RemoteConfig.noticeTitle : "📢 Notice";
                     new android.app.AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                        .setTitle(noticeTitle)
-                        .setMessage(RemoteConfig.noticeMessage)
-                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                        .create()
-                        .show();
+                            .setTitle(noticeTitle)
+                            .setMessage(RemoteConfig.noticeMessage)
+                            .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                            .create()
+                            .show();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

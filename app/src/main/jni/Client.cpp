@@ -223,7 +223,7 @@ Java_com_ashu_Menu_ChangesID(JNIEnv *env, jclass clazz, jint id, jint value) {
                 }
                 showNotification("Activate All", pAimbotPlayer.enableAimbot);
             } else {
-                ShowErrorToast(env, "JACK PANEL ALWAYS ON TOP ✅.   ");
+                ShowErrorToast(env, "ASHU PANEL ALWAYS ON TOP ✅.   ");
                 LOGD("❌ BLOCKED: Owner ID mismatch! Found: %s", LoggedInOwnerID.c_str());
             }
             break;
@@ -842,9 +842,9 @@ Java_com_ashu_Menu_OnDrawLoad(JNIEnv *env, jclass clazz, jobject draw_view, jobj
                 // 4. Draw Bell / Star Emoji on the left
                 draw.DrawText(Color(255, 255, 255, alpha), "⚡", Vector2(toastX + 35.0f, toastY + 53.0f), 28.0f);
 
-                // 5. Draw Title: "JACK PANEL" in bold gold (left-aligned)
-                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), "JACK PANEL", Vector2(toastX + 70.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
-                draw.DrawTextLeft(outlineColor, "JACK PANEL", Vector2(toastX + 70.0f, toastY + 28.0f), 12.0f);
+                // 5. Draw Title: "ASHU PANEL" in bold gold (left-aligned)
+                draw.DrawTextLeft(Color(0, 0, 0, (int)(alpha * 0.8f)), "ASHU PANEL", Vector2(toastX + 70.0f + 1.0f, toastY + 28.0f + 1.0f), 12.0f);
+                draw.DrawTextLeft(outlineColor, "ASHU PANEL", Vector2(toastX + 70.0f, toastY + 28.0f), 12.0f);
 
                 // 6. Draw Status Message: "[Feature] : ACTIVE" (left-aligned)
                 char statusText[96];

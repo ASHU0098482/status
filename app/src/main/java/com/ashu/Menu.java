@@ -297,7 +297,7 @@ public class Menu {
 
         TextView menuTitle = new TextView(context);
         String appDisplayName = (RemoteConfig.appName != null && !RemoteConfig.appName.isEmpty())
-                ? RemoteConfig.appName : "JACK PANEL";
+                ? RemoteConfig.appName : "ASHU PANEL";
         menuTitle.setText(appDisplayName);
         menuTitle.setTextSize(13.5f);
         menuTitle.setTextColor(PrimaryColor);

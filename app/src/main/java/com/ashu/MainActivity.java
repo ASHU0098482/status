@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
 
     public void showUpdateDialog(final String updateUrl) {
         final String validUpdateUrl = (updateUrl != null && !updateUrl.isEmpty())
-            ? updateUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/JACK_PANEL.apk";
+            ? updateUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/ASHU_PANEL.apk";
         String msg = (RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) 
             ? RemoteConfig.noticeMessage + "\n\nTap 'UPDATE NOW' to download and install from GitHub."
             : "A new update is available on GitHub. Tap 'UPDATE NOW' to download and install.";
@@ -170,7 +170,7 @@ public class MainActivity extends Activity {
 
     public void downloadAndInstallApk(final String apkUrl) {
         final String downloadUrl = (apkUrl != null && !apkUrl.isEmpty())
-            ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/JACK_PANEL.apk";
+            ? apkUrl : "https://raw.githubusercontent.com/ASHU0098482/status/main/ASHU_PANEL.apk";
         android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
         String dialogTitle = (RemoteConfig.noticeTitle != null && !RemoteConfig.noticeTitle.isEmpty())
             ? RemoteConfig.noticeTitle : "🔄 Auto Updating APK...";
@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
             try {
                 java.io.File updatesDir = new java.io.File(getExternalFilesDir(null), "updates");
                 if (!updatesDir.exists()) updatesDir.mkdirs();
-                java.io.File apkFile = new java.io.File(updatesDir, "JACK_PANEL_update.apk");
+                java.io.File apkFile = new java.io.File(updatesDir, "ASHU_PANEL_update.apk");
                 if (apkFile.exists()) apkFile.delete();
 
                 String currentUrl = downloadUrl;
@@ -400,7 +400,7 @@ public class MainActivity extends Activity {
         final TextView splashText = new TextView(this);
         // Get app name from remote config
         String appName = (com.ashu.RemoteConfig.appName != null && !com.ashu.RemoteConfig.appName.isEmpty())
-                ? com.ashu.RemoteConfig.appName : "JACK PANEL";
+                ? com.ashu.RemoteConfig.appName : "ASHU PANEL";
         splashText.setText("");
         splashText.setTextSize(36);
         splashText.setTextColor(Color.parseColor("#FFB800")); // Golden accent

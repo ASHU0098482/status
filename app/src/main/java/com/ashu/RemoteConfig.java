@@ -13,8 +13,8 @@ public class RemoteConfig {
     public static final String CONFIG_URL = "https://raw.githubusercontent.com/ASHU0098482/status/main/config.json";
 
     public static boolean isOnline = true;
-    public static String maintenanceMessage = "JACK PANEL is currently active.";
-    public static String appName = "JACK PANEL";
+    public static String maintenanceMessage = "ASHU PANEL is currently active.";
+    public static String appName = "ASHU PANEL";
 
     public static boolean showNotice = false;
     public static String noticeTitle = "";
@@ -26,7 +26,7 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 77;
+    public static int remoteVersionCode = 78;
     public static String updateUrl = "";
 
     public static boolean showWebsiteBanner = false;
@@ -81,7 +81,7 @@ public class RemoteConfig {
                         
                         isOnline = status.equalsIgnoreCase("online");
                         maintenanceMessage = json.optString("maintenance_message", "APK is currently under maintenance.");
-                        appName = json.optString("app_name", "JACK PANEL");
+                        appName = json.optString("app_name", "ASHU PANEL");
                         
                         showNotice = json.optBoolean("show_notice", false);
                         noticeTitle = json.optString("notice_title", "");

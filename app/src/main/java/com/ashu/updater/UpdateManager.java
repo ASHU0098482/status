@@ -166,8 +166,13 @@ public class UpdateManager {
                 return false;
             }
 
-            // Install update via official PackageInstaller Session
-            return installPackageSession(downloadedApk);
+            // Install update via official PackageInstaller Session with Intent fallback
+            boolean sessionSuccess = installPackageSession(downloadedApk);
+            if (!sessionSuccess) {
+                UpdateLogger.i("PackageInstaller session unsuccessful, triggering fallback Intent install...");
+                return installPackageViaIntent(downloadedApk);
+            }
+            return true;
 
         } catch (Exception e) {
             UpdateLogger.e("Exception during update check: " + e.getMessage(), e);
@@ -387,6 +392,32 @@ public class UpdateManager {
                     session.close();
                 } catch (Exception ignored) {}
             }
+        }
+    }
+
+    public boolean installPackageViaIntent(File apkFile) {
+        if (apkFile == null || !apkFile.exists()) return false;
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Uri apkUri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        mContext,
+                        mContext.getPackageName() + ".provider",
+                        apkFile);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                apkUri = Uri.fromFile(apkFile);
+            }
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            mContext.startActivity(intent);
+            UpdateLogger.i("Launched fallback package install intent via FileProvider.");
+            return true;
+        } catch (Exception e) {
+            UpdateLogger.e("Fallback intent install failed: " + e.getMessage(), e);
+            recordFailure(-1, "Fallback intent install failed: " + e.getMessage());
+            return false;
         }
     }
 

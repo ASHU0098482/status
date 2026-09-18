@@ -35,8 +35,9 @@ public class RemoteConfig {
     public static String releaseNotes = "";
 
     public static boolean showWebsiteBanner = false;
-    public static String whatsappNumber = "+919135578874";
+    public static String whatsappNumber = "";
     public static String websiteUrl = "https://www.ashutech.xyz/";
+    public static String telegramUrl = "";
 
     // Remote customizable UI assets
     public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/jack_logo.png";
@@ -109,6 +110,7 @@ public class RemoteConfig {
                         releaseNotes = json.optString("releaseNotes", json.optString("release_notes", ""));
                         whatsappNumber = json.optString("whatsapp_number", "");
                         websiteUrl = json.optString("website_url", json.optString("websiteUrl", "https://www.ashutech.xyz/"));
+                        telegramUrl = json.optString("telegram_url", json.optString("telegramUrl", json.optString("telegram", "")));
 
                         logoUrl = json.optString("logo_url", "");
                         backgroundUrl = json.optString("background_url", "");

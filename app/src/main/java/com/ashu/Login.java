@@ -494,26 +494,29 @@ public class Login {
         actionRowParams.setMargins(0, 0, 0, utils.FixDP(8));
         actionRow.setLayoutParams(actionRowParams);
 
-        Button buyKeyBtn = createSecondaryActionButton("💬 GET KEY", v -> {
+        Button telegramBtn = createSecondaryActionButton("✈️ TELEGRAM", v -> {
             triggerHaptic(20);
             try {
-                String waNumber = RemoteConfig.whatsappNumber != null ? RemoteConfig.whatsappNumber.trim() : "";
-                String targetUrl;
-                if (!waNumber.isEmpty()) {
-                    String cleanNum = waNumber.replaceAll("[^0-9]", "");
-                    targetUrl = "https://wa.me/" + cleanNum + "?text=Hello%20Ashu%20Panel%2C%20I%20want%20to%20buy%20Key";
+                String tg = (RemoteConfig.telegramUrl != null) ? RemoteConfig.telegramUrl.trim() : "";
+                if (tg.isEmpty()) {
+                    showToast("Telegram support link will be updated soon!");
                 } else {
-                    targetUrl = "https://wa.me/?text=Hello%20Ashu%20Panel%2C%20I%20want%20to%20buy%20Key";
+                    String targetUrl = tg;
+                    if (targetUrl.startsWith("@")) {
+                        targetUrl = "https://t.me/" + targetUrl.substring(1);
+                    } else if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+                        targetUrl = "https://t.me/" + targetUrl;
+                    }
+                    Intent tgIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                    tgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(tgIntent);
                 }
-                Intent waIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                waIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(waIntent);
             } catch (Exception e) {
-                showToast("Cannot open WhatsApp: " + e.getMessage());
+                showToast("Cannot open Telegram: " + e.getMessage());
             }
         });
 
-        Button supportBtn = createSecondaryActionButton("🌐 VISIT WEBSITE", v -> {
+        Button websiteBtn = createSecondaryActionButton("🌐 VISIT WEBSITE", v -> {
             triggerHaptic(20);
             try {
                 String siteUrl = (RemoteConfig.websiteUrl != null && !RemoteConfig.websiteUrl.trim().isEmpty())
@@ -530,12 +533,12 @@ public class Login {
             }
         });
 
-        actionRow.addView(buyKeyBtn);
+        actionRow.addView(telegramBtn);
         // Small spacer
         View spacer = new View(context);
         spacer.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(8), ViewGroup.LayoutParams.MATCH_PARENT));
         actionRow.addView(spacer);
-        actionRow.addView(supportBtn);
+        actionRow.addView(websiteBtn);
         card.addView(actionRow);
 
         // --- 1.7b OBB 55 Highlighted Showcase Badge ---

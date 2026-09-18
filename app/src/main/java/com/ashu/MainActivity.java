@@ -73,11 +73,30 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                if (RemoteConfig.showNotice && RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) {
-                    showNoticeDialog(RemoteConfig.noticeTitle, RemoteConfig.noticeMessage, () -> showFirstSplash());
-                } else {
-                    showFirstSplash();
+                // If already updated, suppress any stale update notices; only show announcements once
+                android.content.SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                String lastSeenNotice = prefs.getString("last_seen_notice", "");
+                String currentNoticeKey = (RemoteConfig.noticeTitle != null ? RemoteConfig.noticeTitle : "") + "_" + 
+                                          (RemoteConfig.noticeMessage != null ? RemoteConfig.noticeMessage : "");
+
+                if (RemoteConfig.showNotice 
+                        && RemoteConfig.noticeMessage != null 
+                        && !RemoteConfig.noticeMessage.isEmpty()
+                        && !currentNoticeKey.equals(lastSeenNotice)) {
+
+                    boolean isUpdateNotice = (RemoteConfig.noticeTitle != null && RemoteConfig.noticeTitle.toLowerCase().contains("update"))
+                            || (RemoteConfig.noticeMessage.toLowerCase().contains("update is available"));
+
+                    if (!isUpdateNotice) {
+                        showNoticeDialog(RemoteConfig.noticeTitle, RemoteConfig.noticeMessage, () -> {
+                            prefs.edit().putString("last_seen_notice", currentNoticeKey).apply();
+                            showFirstSplash();
+                        });
+                        return;
+                    }
                 }
+
+                showFirstSplash();
             });
         });
     }
@@ -98,8 +117,25 @@ public class MainActivity extends Activity {
                 .setCancelable(false)
                 .setPositiveButton("UPDATE NOW", (d, which) -> {
                     d.dismiss();
-                    Toast.makeText(MainActivity.this, "Starting update download...", Toast.LENGTH_SHORT).show();
-                    com.ashu.updater.UpdateManager.getInstance(MainActivity.this).checkForUpdate(false);
+                    android.app.ProgressDialog progress = new android.app.ProgressDialog(MainActivity.this, android.app.AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+                    progress.setTitle("Downloading Update");
+                    progress.setMessage("Downloading update... Please wait.");
+                    progress.setCancelable(false);
+                    progress.show();
+
+                    new Thread(() -> {
+                        boolean success = com.ashu.updater.UpdateManager.getInstance(MainActivity.this).checkForUpdateSync(false);
+                        runOnUiThread(() -> {
+                            try {
+                                if (progress.isShowing()) {
+                                    progress.dismiss();
+                                }
+                            } catch (Exception ignored) {}
+                            if (!success) {
+                                Toast.makeText(MainActivity.this, "Update download failed or cooled off. Please retry.", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }).start();
                 })
                 .setNegativeButton(RemoteConfig.forceUpdate ? "EXIT" : "LATER", (d, which) -> {
                     d.dismiss();

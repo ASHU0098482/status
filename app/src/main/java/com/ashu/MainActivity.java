@@ -61,6 +61,18 @@ public class MainActivity extends Activity {
                     return;
                 }
 
+                int localVersion = 1;
+                try {
+                    localVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (RemoteConfig.remoteVersionCode > localVersion) {
+                    showUpdateDialog(RemoteConfig.updateUrl);
+                    return;
+                }
+
                 if (RemoteConfig.showNotice && RemoteConfig.noticeMessage != null && !RemoteConfig.noticeMessage.isEmpty()) {
                     showNoticeDialog(RemoteConfig.noticeTitle, RemoteConfig.noticeMessage, () -> showFirstSplash());
                 } else {
@@ -71,8 +83,34 @@ public class MainActivity extends Activity {
     }
 
     public void showUpdateDialog(final String updateUrl) {
-        // Trigger background silent update directly without intrusive dialogs
-        com.ashu.updater.UpdateManager.getInstance(this).checkForUpdate(true);
+        String validUpdateUrl = (updateUrl != null && !updateUrl.isEmpty())
+                ? updateUrl
+                : "https://raw.githubusercontent.com/ASHU0098482/status/HEAD/ASHU_PANEL.apk";
+        String notes = (RemoteConfig.releaseNotes != null && !RemoteConfig.releaseNotes.isEmpty())
+                ? "\n\nWhat's new:\n" + RemoteConfig.releaseNotes
+                : "";
+        String msg = "A new update (v" + RemoteConfig.versionName + ") is available!" + notes + "\n\nTap 'UPDATE NOW' to install the latest version.";
+        String title = "🔄 UPDATE AVAILABLE";
+
+        new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(title)
+                .setMessage(msg)
+                .setCancelable(false)
+                .setPositiveButton("UPDATE NOW", (d, which) -> {
+                    d.dismiss();
+                    Toast.makeText(MainActivity.this, "Starting update download...", Toast.LENGTH_SHORT).show();
+                    com.ashu.updater.UpdateManager.getInstance(MainActivity.this).checkForUpdate(false);
+                })
+                .setNegativeButton(RemoteConfig.forceUpdate ? "EXIT" : "LATER", (d, which) -> {
+                    d.dismiss();
+                    if (RemoteConfig.forceUpdate) {
+                        finishAffinity();
+                    } else {
+                        showFirstSplash();
+                    }
+                })
+                .create()
+                .show();
     }
 
     private void showNoticeDialog(String title, String message, Runnable onContinue) {

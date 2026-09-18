@@ -513,10 +513,16 @@ public class Login {
             }
         });
 
-        Button supportBtn = createSecondaryActionButton("🌐 SUPPORT", v -> {
+        Button supportBtn = createSecondaryActionButton("🌐 VISIT WEBSITE", v -> {
             triggerHaptic(20);
             try {
-                Intent supportIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://jackxstore.vercel.app/"));
+                String siteUrl = (RemoteConfig.websiteUrl != null && !RemoteConfig.websiteUrl.trim().isEmpty())
+                        ? RemoteConfig.websiteUrl.trim()
+                        : "https://www.ashutech.xyz/";
+                if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
+                    siteUrl = "https://" + siteUrl;
+                }
+                Intent supportIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(siteUrl));
                 supportIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(supportIntent);
             } catch (Exception e) {

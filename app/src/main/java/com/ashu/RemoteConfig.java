@@ -27,7 +27,7 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 86;
+    public static int remoteVersionCode = 95;
     public static String updateUrl = "";
     public static String sha256 = "";
     public static String versionName = "";
@@ -37,7 +37,7 @@ public class RemoteConfig {
     public static boolean showWebsiteBanner = false;
     public static String whatsappNumber = "";
     public static String websiteUrl = "https://www.ashutech.xyz/";
-    public static String telegramUrl = "";
+    public static String telegramUrl = "https://t.me/ashuanand1";
 
     // Remote customizable UI assets
     public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/jack_logo.png";

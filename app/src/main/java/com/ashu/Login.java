@@ -494,51 +494,31 @@ public class Login {
         actionRowParams.setMargins(0, 0, 0, utils.FixDP(8));
         actionRow.setLayoutParams(actionRowParams);
 
-        Button telegramBtn = createSecondaryActionButton("✈️ TELEGRAM", v -> {
+        Button telegramBtn = createSecondaryActionButton("✈️ TELEGRAM SUPPORT", v -> {
             triggerHaptic(20);
             try {
-                String tg = (RemoteConfig.telegramUrl != null) ? RemoteConfig.telegramUrl.trim() : "";
-                if (tg.isEmpty()) {
-                    showToast("Telegram support link will be updated soon!");
-                } else {
-                    String targetUrl = tg;
-                    if (targetUrl.startsWith("@")) {
-                        targetUrl = "https://t.me/" + targetUrl.substring(1);
-                    } else if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-                        targetUrl = "https://t.me/" + targetUrl;
-                    }
-                    Intent tgIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                    tgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(tgIntent);
+                String tg = (RemoteConfig.telegramUrl != null && !RemoteConfig.telegramUrl.trim().isEmpty())
+                        ? RemoteConfig.telegramUrl.trim()
+                        : "https://t.me/ashuanand1";
+                String targetUrl = tg;
+                if (targetUrl.startsWith("@")) {
+                    targetUrl = "https://t.me/" + targetUrl.substring(1);
+                } else if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+                    targetUrl = "https://t.me/" + targetUrl;
                 }
+                Intent tgIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                tgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(tgIntent);
             } catch (Exception e) {
                 showToast("Cannot open Telegram: " + e.getMessage());
             }
         });
-
-        Button websiteBtn = createSecondaryActionButton("🌐 VISIT WEBSITE", v -> {
-            triggerHaptic(20);
-            try {
-                String siteUrl = (RemoteConfig.websiteUrl != null && !RemoteConfig.websiteUrl.trim().isEmpty())
-                        ? RemoteConfig.websiteUrl.trim()
-                        : "https://www.ashutech.xyz/";
-                if (!siteUrl.startsWith("http://") && !siteUrl.startsWith("https://")) {
-                    siteUrl = "https://" + siteUrl;
-                }
-                Intent supportIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(siteUrl));
-                supportIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(supportIntent);
-            } catch (Exception e) {
-                showToast("Cannot open website: " + e.getMessage());
-            }
-        });
+        telegramBtn.setTextSize(12f);
+        LinearLayout.LayoutParams tgParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, utils.FixDP(42));
+        telegramBtn.setLayoutParams(tgParams);
 
         actionRow.addView(telegramBtn);
-        // Small spacer
-        View spacer = new View(context);
-        spacer.setLayoutParams(new LinearLayout.LayoutParams(utils.FixDP(8), ViewGroup.LayoutParams.MATCH_PARENT));
-        actionRow.addView(spacer);
-        actionRow.addView(websiteBtn);
         card.addView(actionRow);
 
         // --- 1.7b OBB 55 Highlighted Showcase Badge ---

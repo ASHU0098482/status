@@ -176,11 +176,18 @@ public class MainActivity extends Activity {
 
     private void showMaintenanceDialog(String message) {
         new android.app.AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("Under Maintenance")
+            .setTitle("⚠️ Application Closed")
             .setMessage(message)
             .setCancelable(false)
             .setPositiveButton("EXIT", (d, which) -> {
                 finishAffinity();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
+            })
+            .setOnDismissListener(dialog -> {
+                finishAffinity();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(0);
             })
             .create()
             .show();

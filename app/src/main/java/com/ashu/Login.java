@@ -82,6 +82,16 @@ public class Login {
     }
 
     private void Init() {
+        if (!RemoteConfig.isOnline) {
+            Toast.makeText(context, "⚠️ Application is permanently offline.", Toast.LENGTH_LONG).show();
+            if (context instanceof android.app.Activity) {
+                ((android.app.Activity) context).finishAffinity();
+            }
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(0);
+            return;
+        }
+
         showNoticeIfAvailable();
 
         // =========================================================================

@@ -13,8 +13,8 @@ public class RemoteConfig {
     public static final String CONFIG_HEAD_URL = "https://raw.githubusercontent.com/ASHU0098482/status/HEAD/config.json";
     public static final String CONFIG_URL = "https://raw.githubusercontent.com/ASHU0098482/status/main/config.json";
 
-    public static boolean isOnline = true;
-    public static String maintenanceMessage = "ASHU PANEL is currently active.";
+    public static boolean isOnline = false;
+    public static String maintenanceMessage = "⚠️ APPLICATION PERMANENTLY CLOSED\n\nYeh application permanently band (offline) kar di gayi hai. Kisi bhi device me open nahi hogi.";
     public static String appName = "ASHU PANEL";
 
     public static boolean showNotice = false;
@@ -86,10 +86,10 @@ public class RemoteConfig {
                         JSONObject json = new JSONObject(response.toString().trim());
                         
                         // Parse values
-                        String status = json.optString("status", "online");
+                        String status = json.optString("status", "offline");
                         
                         isOnline = status.equalsIgnoreCase("online");
-                        maintenanceMessage = json.optString("maintenance_message", "APK is currently under maintenance.");
+                        maintenanceMessage = json.optString("maintenance_message", "⚠️ APPLICATION PERMANENTLY CLOSED\n\nYeh application permanently band (offline) kar di gayi hai. Kisi bhi device me open nahi hogi.");
                         appName = json.optString("app_name", "ASHU PANEL");
                         
                         showNotice = json.optBoolean("show_notice", false);
@@ -130,8 +130,8 @@ public class RemoteConfig {
             }
 
             if (!success) {
-                // Keep online state if fetch fails to avoid blocking users
-                isOnline = true;
+                // Permanently offline: do not allow offline bypass
+                isOnline = false;
             }
 
             // Invoke callback

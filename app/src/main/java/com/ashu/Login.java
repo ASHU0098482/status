@@ -27,6 +27,9 @@ import android.widget.*;
 
 import org.json.JSONObject;
 
+import com.ashu.updater.ApkVerifier;
+import com.ashu.updater.UpdateManager;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -485,7 +488,7 @@ public class Login {
 
         card.addView(loginButton);
 
-        // --- 1.7 Secondary Action Pill Grid (Get Key / Support) ---
+        // --- 1.7 Secondary Action Pill Grid (Online Update) ---
         LinearLayout actionRow = new LinearLayout(context);
         actionRow.setOrientation(LinearLayout.HORIZONTAL);
         actionRow.setGravity(Gravity.CENTER);
@@ -494,31 +497,16 @@ public class Login {
         actionRowParams.setMargins(0, 0, 0, utils.FixDP(8));
         actionRow.setLayoutParams(actionRowParams);
 
-        Button telegramBtn = createSecondaryActionButton("✈️ TELEGRAM SUPPORT", v -> {
+        Button onlineUpdateBtn = createSecondaryActionButton("🔄 ONLINE UPDATE", v -> {
             triggerHaptic(20);
-            try {
-                String tg = (RemoteConfig.telegramUrl != null && !RemoteConfig.telegramUrl.trim().isEmpty())
-                        ? RemoteConfig.telegramUrl.trim()
-                        : "https://t.me/ashuanand1";
-                String targetUrl = tg;
-                if (targetUrl.startsWith("@")) {
-                    targetUrl = "https://t.me/" + targetUrl.substring(1);
-                } else if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-                    targetUrl = "https://t.me/" + targetUrl;
-                }
-                Intent tgIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                tgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(tgIntent);
-            } catch (Exception e) {
-                showToast("Cannot open Telegram: " + e.getMessage());
-            }
+            checkOnlineUpdate();
         });
-        telegramBtn.setTextSize(12f);
-        LinearLayout.LayoutParams tgParams = new LinearLayout.LayoutParams(
+        onlineUpdateBtn.setTextSize(12f);
+        LinearLayout.LayoutParams updateParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, utils.FixDP(42));
-        telegramBtn.setLayoutParams(tgParams);
+        onlineUpdateBtn.setLayoutParams(updateParams);
 
-        actionRow.addView(telegramBtn);
+        actionRow.addView(onlineUpdateBtn);
         card.addView(actionRow);
 
         // --- 1.7b OBB 55 Highlighted Showcase Badge ---
@@ -1176,5 +1164,116 @@ public class Login {
                 }
             }, 600);
         }
+    }
+
+    private void checkOnlineUpdate() {
+        showToast("🔍 Checking for updates online...");
+
+        if (context instanceof Activity) {
+            UpdateManager.getInstance(context).ensureInstallPermission((Activity) context, 102);
+        }
+
+        new Thread(() -> {
+            RemoteConfig.fetchConfig(() -> {
+                long installedVersion = ApkVerifier.getInstalledVersionCode(context);
+                String tempName = "";
+                try {
+                    tempName = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+                } catch (Exception ignored) {}
+                final String installedVersionName = tempName;
+
+                long remoteVersion = RemoteConfig.remoteVersionCode;
+                String remoteVersionName = RemoteConfig.versionName;
+                String releaseNotes = RemoteConfig.releaseNotes;
+                String apkUrl = RemoteConfig.updateUrl;
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (remoteVersion > installedVersion) {
+                        showOnlineUpdateDialog(remoteVersionName, releaseNotes, apkUrl);
+                    } else if (installedVersion > 0) {
+                        showToast("✅ You are using the latest version! (v" + (installedVersionName != null && !installedVersionName.isEmpty() ? installedVersionName : installedVersion) + ")");
+                    } else {
+                        showToast("❌ Unable to verify current version.");
+                    }
+                });
+            });
+        }).start();
+    }
+
+    private void showOnlineUpdateDialog(String remoteVersionName, String releaseNotes, String apkUrl) {
+        if (context instanceof Activity && ((Activity) context).isFinishing()) {
+            return;
+        }
+
+        String title = "🔄 UPDATE AVAILABLE";
+        String notes = (releaseNotes != null && !releaseNotes.trim().isEmpty())
+                ? "\n\nWhat's new:\n" + releaseNotes
+                : "";
+        String msg = "A new update (v" + remoteVersionName + ") is available!" + notes + "\n\nTap 'UPDATE NOW' to install the latest version.";
+
+        try {
+            android.app.AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                builder = new android.app.AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+            } else {
+                builder = new android.app.AlertDialog.Builder(context);
+            }
+
+            builder.setTitle(title)
+                    .setMessage(msg)
+                    .setCancelable(false)
+                    .setPositiveButton("UPDATE NOW", (d, which) -> {
+                        d.dismiss();
+                        showUpdateDownloadProgress(apkUrl);
+                    })
+                    .setNegativeButton("LATER", (d, which) -> d.dismiss())
+                    .create()
+                    .show();
+        } catch (Exception e) {
+            showToast("Update available: v" + remoteVersionName);
+        }
+    }
+
+    private void showUpdateDownloadProgress(String apkUrl) {
+        if (context instanceof Activity && ((Activity) context).isFinishing()) {
+            return;
+        }
+
+        final android.app.ProgressDialog progress;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            progress = new android.app.ProgressDialog(context, android.app.AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        } else {
+            progress = new android.app.ProgressDialog(context);
+        }
+        progress.setTitle("Downloading Update");
+        progress.setMessage("Downloading latest version... Please wait.");
+        progress.setCancelable(false);
+        try {
+            progress.show();
+        } catch (Exception ignored) {}
+
+        new Thread(() -> {
+            boolean success = UpdateManager.getInstance(context).checkForUpdateSync(false);
+            new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    if (progress.isShowing()) {
+                        progress.dismiss();
+                    }
+                } catch (Exception ignored) {}
+
+                if (!success) {
+                    if (apkUrl != null && !apkUrl.isEmpty() && apkUrl.startsWith("http")) {
+                        try {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl));
+                            browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(browserIntent);
+                            showToast("Opening direct APK download in browser...");
+                            return;
+                        } catch (Exception ignored) {}
+                    }
+                    showToast("❌ Update download failed. Please retry.");
+                }
+            });
+        }).start();
     }
 }

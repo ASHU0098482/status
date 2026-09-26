@@ -132,6 +132,15 @@ public class MainActivity extends Activity {
                                 }
                             } catch (Exception ignored) {}
                             if (!success) {
+                                if (validUpdateUrl != null && !validUpdateUrl.isEmpty() && validUpdateUrl.startsWith("http")) {
+                                    try {
+                                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(validUpdateUrl));
+                                        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(browserIntent);
+                                        Toast.makeText(MainActivity.this, "Opening direct APK download in browser...", Toast.LENGTH_LONG).show();
+                                        return;
+                                    } catch (Exception ignored) {}
+                                }
                                 Toast.makeText(MainActivity.this, "Update download failed or cooled off. Please retry.", Toast.LENGTH_LONG).show();
                             }
                         });

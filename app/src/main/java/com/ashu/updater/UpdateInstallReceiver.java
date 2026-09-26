@@ -52,7 +52,13 @@ public class UpdateInstallReceiver extends BroadcastReceiver {
                 String statusName = getStatusString(status);
                 UpdateLogger.log(UpdateLogger.INSTALL_FAILED,
                         "Install failed [" + statusName + " (" + status + ")]: " + message + " (session " + sessionId + ")");
-                UpdateManager.getInstance(context).onInstallFailed(status, message);
+                java.io.File pendingApk = new java.io.File(context.getCacheDir(), "updates/pending_update.apk");
+                if (pendingApk.exists() && (status == PackageInstaller.STATUS_FAILURE_BLOCKED || status == PackageInstaller.STATUS_FAILURE_ABORTED || status == PackageInstaller.STATUS_FAILURE)) {
+                    UpdateLogger.i("Session failed, launching emergency FileProvider Intent install...");
+                    UpdateManager.getInstance(context).installPackageViaIntent(pendingApk);
+                } else {
+                    UpdateManager.getInstance(context).onInstallFailed(status, message);
+                }
                 break;
         }
     }

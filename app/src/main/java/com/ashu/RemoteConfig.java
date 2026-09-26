@@ -27,7 +27,7 @@ public class RemoteConfig {
     public static String keyauthVersion = "1.0";
     public static String keyauthUrl = "https://keyauth.win/api/1.3/";
 
-    public static int remoteVersionCode = 95;
+    public static int remoteVersionCode = 96;
     public static String updateUrl = "";
     public static String sha256 = "";
     public static String versionName = "";
@@ -36,8 +36,8 @@ public class RemoteConfig {
 
     public static boolean showWebsiteBanner = false;
     public static String whatsappNumber = "";
-    public static String websiteUrl = "https://www.ashutech.xyz/";
-    public static String telegramUrl = "https://t.me/ashuanand1";
+    public static String websiteUrl = "";
+    public static String telegramUrl = "";
 
     // Remote customizable UI assets
     public static String logoUrl = "https://raw.githubusercontent.com/ASHU0098482/status/main/jack_logo.png";
@@ -109,7 +109,7 @@ public class RemoteConfig {
                         forceUpdate = json.optBoolean("forceUpdate", json.optBoolean("force_update", false));
                         releaseNotes = json.optString("releaseNotes", json.optString("release_notes", ""));
                         whatsappNumber = json.optString("whatsapp_number", "");
-                        websiteUrl = json.optString("website_url", json.optString("websiteUrl", "https://www.ashutech.xyz/"));
+                        websiteUrl = json.optString("website_url", json.optString("websiteUrl", ""));
                         telegramUrl = json.optString("telegram_url", json.optString("telegramUrl", json.optString("telegram", "")));
 
                         logoUrl = json.optString("logo_url", "");

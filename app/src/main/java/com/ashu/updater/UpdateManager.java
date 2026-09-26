@@ -92,6 +92,24 @@ public class UpdateManager {
     }
 
     /**
+     * Prompts the user to grant "Install Unknown Apps" permission before manual update if needed.
+     */
+    public void ensureInstallPermission(Activity activity, int requestCode) {
+        if (activity == null || activity.isFinishing()) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!canRequestPackageInstalls()) {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:" + activity.getPackageName()));
+                    activity.startActivityForResult(intent, requestCode);
+                } catch (Exception e) {
+                    UpdateLogger.e("Failed to open unknown app settings", e);
+                }
+            }
+        }
+    }
+
+    /**
      * Trigger asynchronous update check (e.g. on app launch or network state change).
      */
     public void checkForUpdate(boolean silent) {
@@ -134,12 +152,15 @@ public class UpdateManager {
             // Prevent rapid failure loops: if the same version failed repeatedly (> 3 times), cool off for 1 hour
             long lastFailedVersion = mPrefs.getLong(KEY_FAILED_VERSION, -1);
             int failedCount = mPrefs.getInt(KEY_FAILED_COUNT, 0);
-            if (lastFailedVersion == config.versionCode && failedCount >= 3) {
+            if (silent && lastFailedVersion == config.versionCode && failedCount >= 3) {
                 long lastCheck = mPrefs.getLong(KEY_LAST_CHECK_TIME, 0);
                 if (System.currentTimeMillis() - lastCheck < 3600000L) {
                     UpdateLogger.w("Update cooled off due to repeated failures (" + failedCount + " times).");
                     return false;
                 }
+            }
+            if (!silent) {
+                mPrefs.edit().putInt(KEY_FAILED_COUNT, 0).apply();
             }
 
             // Download APK into safe app-private cache

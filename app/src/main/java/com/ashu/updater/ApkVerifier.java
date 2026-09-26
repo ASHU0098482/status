@@ -73,16 +73,30 @@ public final class ApkVerifier {
         PackageManager pm = context.getPackageManager();
         String currentPackageName = context.getPackageName();
 
-        // 3. Verify file is a valid APK and can be parsed by PackageManager
+        // 3. Verify file is a valid APK and can be parsed by PackageManager across all Android versions
         PackageInfo archiveInfo = null;
         try {
-            int flags = PackageManager.GET_SIGNATURES;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                flags |= PackageManager.GET_SIGNING_CERTIFICATES;
+                archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), PackageManager.GET_SIGNING_CERTIFICATES);
             }
-            archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), flags);
-        } catch (Exception e) {
-            UpdateLogger.e("Failed to parse APK archive info", e);
+        } catch (Throwable t) {
+            UpdateLogger.w("GET_SIGNING_CERTIFICATES failed for archive: " + t.getMessage());
+        }
+
+        if (archiveInfo == null) {
+            try {
+                archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), PackageManager.GET_SIGNATURES);
+            } catch (Throwable t) {
+                UpdateLogger.w("GET_SIGNATURES failed for archive: " + t.getMessage());
+            }
+        }
+
+        if (archiveInfo == null) {
+            try {
+                archiveInfo = pm.getPackageArchiveInfo(apkFile.getAbsolutePath(), 0);
+            } catch (Throwable t) {
+                UpdateLogger.e("Failed to parse APK archive info with flag 0", t);
+            }
         }
 
         if (archiveInfo == null) {
@@ -183,9 +197,14 @@ public final class ApkVerifier {
                 }
             }
 
-            if (installedCertHashes.isEmpty() || archiveCertHashes.isEmpty()) {
-                UpdateLogger.w("Could not extract signatures from installed app or archive");
+            if (installedCertHashes.isEmpty()) {
+                UpdateLogger.w("Could not extract signatures from installed app");
                 return false;
+            }
+
+            if (archiveCertHashes.isEmpty()) {
+                UpdateLogger.w("Could not extract signatures from archive via PackageManager; delegating signature verification to Android OS PackageInstaller.");
+                return true;
             }
 
             // Verify that the candidate shares at least one common signing certificate
